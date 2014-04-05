@@ -1,0 +1,59 @@
+Spatial particle filter: A method for tracking multi-targets from 4D live cell imaging data.
+
+COMPILATION:
+
+1. Get 'Mersenne Twister (mt19937ar.c)' used as a random number generator. 
+Source code is avaiable in the following author's web page:
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
+
+2. Remove the main function in 'mt19937ar.c'.  
+
+3. Get all the source codes registered in this repositry. If the file 'mt19937ar.c'
+does not exist in the current directory, move it to the current directory.
+
+4. Type 'make'. Then you get the binary file 'track' for tracking multi-objects.
+
+
+INPUT DATA:
+
+The format of input 4D image should be encoded in the following binary format:  
+  
+I: The number of voxels along x axis (int: 4 bytes)  
+J: The number of voxels along y axis (int: 4 bytes)  
+K: The number of voxels along z axis (int: 4 bytes)  
+T: The number of frames (int: 4 bytes)  
+s: The signal intensity of voxel (i,j,k)=(  0,  0,  0) at time t=0 (usigned char: 1 byte)  
+s: The signal intensity of voxel (i,j,k)=(  1,  0,  0) at time t=0 (usigned char: 1 byte)  
+...  
+s: The signal intensity of voxel (i,j,k)=(I-1,  0,  0) at time t=0 (usigned char: 1 byte)  
+s: The signal intensity of voxel (i,j,k)=(  0,  1,  0) at time t=0 (usigned char: 1 byte)  
+...  
+s: The signal intensity of voxel (i,j,k)=(I-1,J-1,  0) at time t=0 (usigned char: 1 byte)  
+...  
+s: The signal intensity of voxel (i,j,k)=(I-1,J-1,K-1) at time t=0 (usigned char: 1 byte)  
+s: The signal intensity of voxel (i,j,k)=(  0,  0,  0) at time t=1 (usigned char: 1 byte)  
+...  
+s: The signal intensity of voxel (i,j,k)=(I-1,J-1,K-1) at time t=T-1 (usigned char: 1 byte)  
+
+** NOTE:  
+** Signal values MUST range from 0 to 255.    
+** Separators such as '\t' and '\n' must NOT be inserted.  
+
+
+USAGE:
+
+In the current directory, type the folloing command:  
+
+./track input-file-name
+
+If the tracking is finished, the output file 'result.bin' is output.
+Then, type the following command:  
+
+./view input-file-name result.bin  
+
+Currently, this viewer is for Mac only. A sample input file 'sample4D.bin' is available at 
+https://sites.google.com/site/webosamuhirose/home/data
+
+
+
+

@@ -58,28 +58,17 @@ double        genrand_real1  (void);
 
 int main (int argc, char** argv){
 
+  FILE   *fp,*fpp; int P=3;
+
   // Parameters
-  const double sgmt   [3] = {1.0,1.0,0.2};
-  const double sgms   [3] = {1.0,1.0,0.2};
-  const int    wmax   [3] = {1,1,1};
-  const int    wlik   [3] = {1,1,1};
-  const int    objsize[3] = {7,7,3};
-  const int    margin [3] = {3,3,1};
+  double sgmt[3],sgms[3];
+  int    wmax[3],wlik[3],objsize[3],margin[3];
+  double alpha,beta,zscale;
+  int    seed,cut,dploop,N;
 
-  const int    seed    = 0;
-  const double alpha   = 0.7;
-  const double beta    = 0.05;
-  const double zscale  = objsize[0]/objsize[2];
-  const byte   cut     = 50;
-  const int    P       = 3;
-  const int    N       = 1000;
-  const int    dploop  = 10;
-
-  FILE   *fp;
   int    imsize[4];
-  int    i,j,t,k,n,n1,p,T,K,k1,k2,u,nf;
-  int    L,ofs;
-  int    nvx,root,rad=objsize[0]/2;
+  int    i,j,t,k,n,n1,p,T,K,k1,k2,u,nf,L,ofs;
+  int    nvx,root,rad;
 
   byte   *y;
   double **vx,**dist;
@@ -91,9 +80,24 @@ int main (int argc, char** argv){
   int    *nmem,*lbl,**Nf;
   int    **H,*path,*tmp;
 
-  /* Input, Allocation, & Initialization */
   if(argc<2||argc>2){printf("USAGE: ./track <4D data>\n");exit(1);}
-  fp=fopen(argv[1],"rb");if(fp==NULL){printf("File: \'%s\' Not Found.\n", argv[1]); exit(1);}
+  if(!(fpp=fopen("param.txt", "r"))){printf("File: \'param.txt\' Not Found.\n");  exit(1);}
+  if(!(fp =fopen(argv[1],    "rb"))){printf("File: \'%s\' Not Found.\n",argv[1]); exit(1);}
+
+  fscanf(fpp,"seed:%d\n",            &seed);
+  fscanf(fpp,"cutoff:%d\n",          &cut);
+  fscanf(fpp,"dploop:%d\n",          &dploop);
+  fscanf(fpp,"N:%d\n",               &N);
+  fscanf(fpp,"alpha:%lf\n",          &alpha);
+  fscanf(fpp,"beta:%lf\n",           &beta);
+  fscanf(fpp,"sgmt:%lf,%lf,%lf\n",   &sgmt[0],&sgmt[1],&sgmt[2]);
+  fscanf(fpp,"sgms:%lf,%lf,%lf\n",   &sgms[0],&sgms[1],&sgms[2]);
+  fscanf(fpp,"wmax:%d,%d,%d\n",      &wmax[0],&wmax[1],&wmax[2]);
+  fscanf(fpp,"wlik:%d,%d,%d\n",      &wlik[0],&wlik[1],&wlik[2]);
+  fscanf(fpp,"objsize:%d,%d,%d\n",   &objsize[0],&objsize[1],&objsize[2]);
+  fscanf(fpp,"margin:%d,%d,%d\n",    &margin [0],&margin [1],&margin [2]);
+  rad=objsize[0]/2; zscale=objsize[0]/objsize[2];
+ 
   init_genrand(seed);
 
   fread(imsize,sizeof(int),4,fp);

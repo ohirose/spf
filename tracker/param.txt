@@ -1,0 +1,12 @@
+seed:0
+cutoff:50
+dploop:10
+N:1000
+alpha:0.7
+beta:0.05  
+sgmt:1.0,1.0,0.2    
+sgms:1.0,1.0,0.2    
+wmax:1,1,1          
+wlik:1,1,1          
+objsize:7,7,3       
+margin:3,3,1        

@@ -42,7 +42,7 @@ int dpmeans(
   int    n,p,k,i;
   int    kmin,nmin,Kt=1;
   double val,min=1.0E200;
-  const double lmd2 = lmd*lmd;
+  //const double lmd2 = lmd*lmd;
 
   assert(P==2||P==3);
 
@@ -58,7 +58,7 @@ int dpmeans(
     for(n=0;n<N;n++){min=1.0E200;kmin=-1;
       for(k=0;k<Kt;k++)d[n][k]=wdist(X[n],m[k],P,dz);                         /* Calcuating distance        */
       for(k=0;k<Kt;k++)if(d[n][k]<min){min=d[n][k];kmin=k;}                   /* Finding the nearest center */ 
-      if(min>lmd2){z[n]=Kt;for(p=0;p<P;p++)m[Kt][p]=X[n][p];Kt++;} else z[n]=kmin;  
+      if(min>lmd){z[n]=Kt;for(p=0;p<P;p++)m[Kt][p]=X[n][p];Kt++;} else z[n]=kmin;  
     }
     for(n=0;n<N ;n++)l[n]=0;for(n=0;n<N ;n++)l[z[n]]++;                       /* Counting cluster members   */
 
@@ -78,7 +78,7 @@ int dpmeans(
 double wdist(const double * x1, const double * x2, const int P, const double dz){ 
   int p; double v,d=0.0; 
   for(p=0;p<P;p++){v=(x1[p]-x2[p])*(x1[p]-x2[p]); d+=(p<P-1)?v:dz*dz*v;}
-  return d;
+  return sqrt(d);
 } 
 
 int cutoff  (byte *y,const int *imsize, const byte cut){ 

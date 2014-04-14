@@ -175,7 +175,7 @@ int main (int argc, char** argv){
         for(n=0;n<N;n++){n1=Nf[u][n];
           if(n1)for(j=0;j<n1;j++){assert(ofs>=0&&j+ofs<N); H[k][j+ofs]=n;
             for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]+noise[k][n][p];
-            if(wdist(X[k][j+ofs],X[u][n],P,zscale)<0.85*rad) /* Avoiding collisions */
+            if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rad) /* Avoiding collisions */
               for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]-0.5*noise[u][n][p];
           }
           ofs+=n1;
@@ -353,6 +353,13 @@ int normal(double *v, int nv){
 }
 
 double gety(const byte *y, const double *x, const int *imsize){
+  int p,P=3,l[3],out=0;  
+  for(p=0;p<P;p++)if(x[p]<0||x[p]>=imsize[p]){out=1;break;} else l[p]=floor(x[p]);
+  return out? 0:(double) y[l[0]+l[1]*imsize[0]+l[2]*imsize[0]*imsize[1]];
+}
+
+
+double getymean(const byte *y, const double *x, const int *imsize, const int *objsize){
   int p,P=3,l[3],out=0;  
   for(p=0;p<P;p++)if(x[p]<0||x[p]>=imsize[p]){out=1;break;} else l[p]=floor(x[p]);
   return out? 0:(double) y[l[0]+l[1]*imsize[0]+l[2]*imsize[0]*imsize[1]];

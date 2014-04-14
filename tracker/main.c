@@ -358,10 +358,3 @@ double gety(const byte *y, const double *x, const int *imsize){
   return out? 0:(double) y[l[0]+l[1]*imsize[0]+l[2]*imsize[0]*imsize[1]];
 }
 
-
-double getymean(const byte *y, const double *x, const int *imsize, const int *objsize){
-  int p,P=3,l[3],out=0;  
-  for(p=0;p<P;p++)if(x[p]<0||x[p]>=imsize[p]){out=1;break;} else l[p]=floor(x[p]);
-  return out? 0:(double) y[l[0]+l[1]*imsize[0]+l[2]*imsize[0]*imsize[1]];
-}
-

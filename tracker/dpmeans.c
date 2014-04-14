@@ -42,7 +42,6 @@ int dpmeans(
   int    n,p,k,i;
   int    kmin,nmin,Kt=1;
   double val,min=1.0E200;
-  //const double lmd2 = lmd*lmd;
 
   assert(P==2||P==3);
 

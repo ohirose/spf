@@ -74,11 +74,11 @@ int main (int argc, char** argv){
   double **vx,**dist;
   double *eta,*eta0,*mov,**g;
   double **x0,***X,**W,**W2,**D,***noise; 
-  double **xyf,**xys,*xf,*xs,*xp,*lik;
+  double **xyf,**xys,*xf,*xs,*xp;
   double *buf;
   int    **G,*U,*V,*Ks; 
   int    *nmem,*lbl,**Nf;
-  int    **H,*path,*tmp;
+  int    **H,*tmp;
 
   if(argc<2||argc>2){printf("USAGE: ./track <4D data>\n");exit(1);}
   if(!(fpp=fopen("param.txt", "r"))){printf("File: \'param.txt\' Not Found.\n");  exit(1);}
@@ -136,10 +136,8 @@ int main (int argc, char** argv){
   mov   = calloc   (P,    sizeof(double));
   V     = calloc   (K,    sizeof(int));     
   U     = calloc   (K,    sizeof(int));    
-  path  = calloc   (K,    sizeof(int));   
   Ks    = calloc   (T,    sizeof(int));   
   buf   = calloc   (K*N*P,sizeof(double));  
-  lik   = calloc   (N,    sizeof(double));  
   tmp   = calloc   (N,    sizeof(double));
 
   
@@ -235,7 +233,7 @@ inline int allzero(const double *W, const int N){
 
 int smoothing(double **W2, int *buf, 
               const int **H, const int **Nf, const int *V, const int *U, const int K, const int N){
-  int i,k,n; double val=0;
+  int i,n,k=-1; double val=0;
 
   for(i=0;i<K;i++)for(n=0;n<N;n++) W2[i][n]=Nf[i][n];
   for(i=1;i<K;i++){k=V[K-i];

@@ -40,7 +40,7 @@ int dpmeans(
   ){
 
   int    n,p,k,i;
-  int    kmin,nmin,Kt=1;
+  int    kmin=-1,nmin=-1,Kt=1;
   double val,min=1.0E200;
 
   assert(P==2||P==3);
@@ -86,9 +86,9 @@ int cutoff  (byte *y,const int *imsize, const byte cut){
 }
 
 int localmax(double **vx, int *nvx, const byte *y, const int *imsize, const int *width){
-  int  i,j,k,l,l0,I,J,K,L,a,b,c,A,B,C,n=0;
+  int  i,j,k,l,l0,I,J,K,a,b,c,A,B,C,n=0;
 
-  I=imsize[0];J=imsize[1];K=imsize[2];L=I*J*K; A=width[0];B=width[1];C=width[2]; *nvx=0;
+  I=imsize[0];J=imsize[1];K=imsize[2];A=width[0];B=width[1];C=width[2]; *nvx=0;
 
   for(i=0;i<I;i++)for(j=0;j<J;j++)for(k=0;k<K;k++){l0=i+j*I+k*I*J;if(y[l0]==0) goto tag;
     for(a=-A;a<=A;a++)for(b=-B;b<=B;b++)for(c=-C;c<=C;c++){l=i+a+(j+b)*I+(k+c)*I*J;

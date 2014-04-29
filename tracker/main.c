@@ -175,7 +175,7 @@ int main (int argc, char** argv){
           if(n1)for(j=0;j<n1;j++){assert(ofs>=0&&j+ofs<N); H[k][j+ofs]=n;
             for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]+noise[k][n][p];
             if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rad) /* Avoiding collisions */
-              for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]-0.5*noise[u][n][p];
+              for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]-0.5*noise[k][n][p];
           }
           ofs+=n1;
         }

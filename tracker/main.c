@@ -158,11 +158,12 @@ int main (int argc, char** argv){
     fread(y,L,sizeof(byte),fp); gcenter(g[t],y,imsize); 
 
     normal(buf,K*N*P);Ks[t]=K;
-    for(i=0;i<K;i++)for(n=0;n<N;n++)for(p=0;p<P;p++)/* Preparation: */
-      noise[i][n][p]=buf[i+n*K+p*K*N]*((V[i]==root)?sgmt[p]:sgms[p]); 
+    for(i=0;i<K;i++)for(n=0;n<N;n++)for(p=0;p<P;p++)
+      noise[V[i]][n][p]=buf[i+n*K+p*K*N]*((V[i]==root)?sgmt[p]:sgms[p]); 
 
     for(i=0;i<K;i++){k=V[i];u=U[k];assert(k>=0&&k<K&&u>=-1&&u<K); 
-      if(i>0/*&&G[u][K-1]!=1*/){
+      /* Prediction */
+      if(i){
         for(p=0;p<P;p++){
           eta [p]=xyf[k+(t-1)*K][p]-xyf[u+(t-1)*K][p];
           eta0[p]=xyf[k        ][p]-xyf[u        ][p];
@@ -179,9 +180,8 @@ int main (int argc, char** argv){
           ofs+=n1;
         }
       } 
-      else for(n=0;n<N;n++)for(p=0;p<P;p++){ 
+      else for(n=0;n<N;n++)for(p=0;p<P;p++)  
         X[k][n][p]=xyf[k+(t-1)*K][p]+(g[t][p]-g[t-1][p])+noise[k][n][p]; 
-      }
     
       /* Filtering */
       if(objinimage(xp,imsize,objsize,margin)){
@@ -250,7 +250,6 @@ int smoothing(double **W2, int *buf,
   return 0;
 }
  
-
 int findroot(int *root, const byte *y, const double **mx, const int K, const int *imsize, const double zscale){
   int k,kmax=-1; double val,max =0;
   for(k=0;k<K;k++){val=gety(y,mx[k],imsize);if(val>max){max=val;kmax=k;}}
@@ -270,7 +269,6 @@ int gcenter (double *g, const byte *y, const int *imsize){
 
   return 0;
 }
-
 
 int objinimage(const double *x, const int *imsize, const int *objsize, const int *margin){
   return    x[0]-objsize[0]-margin[0]>=0 &&  x[0]+objsize[0]+margin[0]<imsize[0]
@@ -297,7 +295,6 @@ int swaponoff(double **X, double *W, int *Non, const int N){
 int revert(double **X, const double *xp, const int Non, const int N){
   int n,p,P=3; for(n=Non-1;n<N;n++)for(p=0;p<P;p++) X[n][p]=xp[p]; return 0;
 }
-
 
 int filtering(double *W, const int N, const int nf, 
               const byte *y, const double **X, const int* wlik,const int *imsize){
@@ -328,7 +325,6 @@ int filtering(double *W, const int N, const int nf,
   return 0;
 }
 
-
 int resampling(int *nums, const double *probs, const int N){
   int i; double u =genrand_real1()/(double)N; 
   for(i=0;i<N;i++){
@@ -338,10 +334,8 @@ int resampling(int *nums, const double *probs, const int N){
   return 0;
 }
 
-
-
 int normal(double *v, int nv){
-  int i,n=(nv/2)-1,odd=nv%2==1?1:0; double u1,u2;
+  int i,n=(nv/2)-1,odd=(nv%2==1)?1:0; double u1,u2;
   if(n)for(i=0;i<n;i++){u1=genrand_real1();u2=genrand_real1();
     v[2*i  ]=sqrt(-2*log(u1))*cos(2*M_PI*u2);
     v[2*i+1]=sqrt(-2*log(u1))*sin(2*M_PI*u2);

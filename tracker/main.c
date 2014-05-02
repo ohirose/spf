@@ -240,8 +240,8 @@ int smoothing(double **W2, int *buf,
     for(n=0;n<N;n++)buf[n]=0;
     for(n=0;n<N;n++)buf[H[k][n]]+=Nf[k][n];
     for(n=0;n<N;n++)W2 [U[k]][n]*=buf[n];
+    if(allzero(W2[k],N))for(n=0;n<N;n++) W2[k][n]=Nf[k][n];
   }
-  if(allzero((const double*)W2,N)) for(i=0;i<K;i++)for(n=0;n<N;n++) W2[k][n]=Nf[k][n];
   for(k=0;k<K;k++){val=0;
     for(n=0;n<N;n++)val+=W2[k][n];
     for(n=0;n<N;n++)W2[k][n]/=val;

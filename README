@@ -2,19 +2,12 @@ Spatial particle filter: A method for tracking multi-targets from 4D live cell i
 
 COMPILATION:
 
-1. Get 'Mersenne Twister (mt19937ar.c)' used as a random number generator. 
-Source code is avaiable in the following author's web page:
-http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
+1. Get all the source codes registered in this repositry and move them to the current directory.
 
-2. Remove the main function in 'mt19937ar.c'.  
-
-3. Get all the source codes registered in this repositry. If the file 'mt19937ar.c'
-does not exist in the current directory, move it to the current directory.
-
-4. Type 'make'. Then you get the binary file 'track' for tracking multi-objects.
+2. Type 'make'. Then you get the binary file 'track' for tracking multi-objects.
 
 
-INPUT DATA:
+INPUT DATA FORMAT:
 
 The format of input 4D image should be encoded in the following binary format:  
   
@@ -53,7 +46,5 @@ Then, type the following command:
 
 Currently, this viewer is for Mac only. A sample input file 'sample4D.bin' is available at 
 https://sites.google.com/site/webosamuhirose/home/data
-
-
 
 

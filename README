@@ -44,7 +44,8 @@ Then, type the following command:
 
 ./view input-file-name result.bin  
 
-Currently, this viewer is for Mac only. A sample input file 'sample4D.bin' is available at 
+Currently, this viewer is for Mac only ('Xquartz' MUST be installed beforehand). 
+A sample input file 'sample4D.bin' is available at 
 https://sites.google.com/site/webosamuhirose/home/data
 
 

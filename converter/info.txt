@@ -1,0 +1,5 @@
+prefix:CFP/S_X
+imtype:tif
+offset:1
+imsize:512,256,20,50
+window:1,1,1

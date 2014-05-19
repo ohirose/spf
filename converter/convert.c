@@ -23,7 +23,8 @@
 #include<opencv/cv.h>
 #include<opencv/highgui.h>
 
-double median (double *a, double *w, const int N);
+typedef unsigned char byte; 
+double  median (double *a, double *w, const int N);
 
 int main(int argc, char **argv) {
   int      ct,l,N,M,a,b,c,i,j,k,t,A,B,C,I,J,K,T;
@@ -31,7 +32,7 @@ int main(int argc, char **argv) {
   int      ofs,size[4],wind[3];
   char     fn[1024],pfx[1024],typ[64],out[1024];
   FILE     *fpo,*fpp;
-  unsigned char *buf;
+  byte     *buf;
   IplImage *img;
 
   if(!(fpp=fopen("info.txt", "r"))){printf("File: \'info.txt\' Not Found.\n");exit(1);}
@@ -48,7 +49,7 @@ int main(int argc, char **argv) {
 
   y0 =malloc(N*sizeof(double)); w0=malloc(M*sizeof(double));
   y1 =malloc(N*sizeof(double)); w1=malloc(M*sizeof(double));
-  buf=malloc(N*sizeof(unsigned char));
+  buf=malloc(N*sizeof(byte));
   
   fpo=fopen(out,"wb"); fwrite(size,sizeof(int),4,fpo);
   for(t=0;t<T;t++){printf("t=%d\n",t+1);
@@ -74,9 +75,9 @@ int main(int argc, char **argv) {
     max=0;
     for(i=0;i<I;i++)for(j=0;j<J;j++)for(k=0;k<K;k++){val=y1[i+j*I+k*I*J];if(val>max)max=val;} scale=255.0/max;
     for(i=0;i<I;i++)for(j=0;j<J;j++)for(k=0;k<K;k++) y1[i+j*I+k*I*J]*=scale;
-    for(i=0;i<I;i++)for(j=0;j<J;j++)for(k=0;k<K;k++) buf[i+j*I+k*I*J]=(unsigned char)y1[i+j*I+k*I*J]; 
+    for(i=0;i<I;i++)for(j=0;j<J;j++)for(k=0;k<K;k++) buf[i+j*I+k*I*J]=(byte)y1[i+j*I+k*I*J]; 
     /* Output */ 
-    fwrite(buf,sizeof(unsigned char),N,fpo); 
+    fwrite(buf,sizeof(byte),N,fpo); 
   }
   fclose(fpo);fpo=NULL;
   	

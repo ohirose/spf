@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
   int      ct,l,N,M,a,b,c,i,j,k,t,A,B,C,I,J,K,T;
   double   *y0,*y1,*w0,*w1,max,mean,val,scale;
   int      ofs,size[4],wind[3];
-  char     fn[1024],pfx[1024],typ[64];
+  char     fn[1024],pfx[1024],typ[64],out[1024];
   FILE     *fpo,*fpp;
   unsigned char *buf;
   IplImage *img;
@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
   fscanf(fpp,"offset:%d\n",         &ofs); ofs++;
   fscanf(fpp,"imsize:%d,%d,%d,%d\n",&size[0],&size[1],&size[2],&size[3]);
   fscanf(fpp,"window:%d,%d,%d\n",   &wind[0],&wind[1],&wind[2]);
+  fscanf(fpp,"output:%s\n",         out);
   fclose(fpp);fpp=NULL;
 
   I=size[0];J=size[1];K=size[2];T=size[3];N=I*J*K;
@@ -49,7 +50,7 @@ int main(int argc, char **argv) {
   y1 =malloc(N*sizeof(double)); w1=malloc(M*sizeof(double));
   buf=malloc(N*sizeof(unsigned char));
   
-  fpo=fopen("data.bin","wb"); fwrite(size,sizeof(int),4,fpo);
+  fpo=fopen(out,"wb"); fwrite(size,sizeof(int),4,fpo);
   for(t=0;t<T;t++){printf("t=%d\n",t+1);
     /* Load images */
     for(k=0;k<K;k++){l=k+t*K+ofs;

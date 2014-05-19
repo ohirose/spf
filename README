@@ -2,7 +2,8 @@ Spatial particle filter: A method for tracking multi-targets from 4D live cell i
 
 COMPILATION:
 
-1. Get all the source codes registered in this repositry and move them to the current directory.
+1. Get all the source codes registered in 'tracker' directory of this repositry 
+   and move them to the current directory.
 
 2. Type 'make'. Then you get the binary file 'track' for tracking multi-objects.
 

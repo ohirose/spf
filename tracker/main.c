@@ -65,6 +65,7 @@ int main (int argc, char** argv){
   int    wmax[3],wlik[3],objsize[3],margin[3];
   double alpha,beta,zscale;
   int    seed,cut,dploop,N;
+  char   in[256],out[256];
 
   int    imsize[4];
   int    i,j,t,k,n,n1,p,T,K,k1,k2,u,nf,L,ofs;
@@ -80,9 +81,7 @@ int main (int argc, char** argv){
   int    *nmem,*lbl,**Nf;
   int    **H,*tmp;
 
-  if(argc<2||argc>2){printf("USAGE: ./track <4D data>\n");exit(1);}
-  if(!(fpp=fopen("param.txt", "r"))){printf("File: \'param.txt\' Not Found.\n");  exit(1);}
-  if(!(fp =fopen(argv[1],    "rb"))){printf("File: \'%s\' Not Found.\n",argv[1]); exit(1);}
+  fpp=fopen("param.txt", "r");if(!fpp){printf("File: \'param.txt\' Not Found.\n"); exit(1);}
 
   fscanf(fpp,"seed:%d\n",            &seed);
   fscanf(fpp,"cutoff:%d\n",          &cut);
@@ -96,13 +95,16 @@ int main (int argc, char** argv){
   fscanf(fpp,"wlik:%d,%d,%d\n",      &wlik[0],&wlik[1],&wlik[2]);
   fscanf(fpp,"objsize:%d,%d,%d\n",   &objsize[0],&objsize[1],&objsize[2]);
   fscanf(fpp,"margin:%d,%d,%d\n",    &margin [0],&margin [1],&margin [2]);
+  fscanf(fpp,"input:%s\n",           in);
+  fscanf(fpp,"output:%s\n",          out);
+  fclose(fpp);fpp=NULL; init_genrand(seed);
   rad=objsize[0]/2; zscale=objsize[0]/objsize[2];
- 
-  init_genrand(seed);
 
-  fread(imsize,sizeof(int),4,fp);
+  fp =fopen(in,"rb");if(!fp){printf("File: \'%s\' Not Found.\n",in);exit(1);}
+
+  fread(imsize,sizeof(int),4,fp); 
   L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
-  fprintf(stderr,"T=%d\n",T);
+  printf("T=%d\n",T);
 
   y     = malloc   (L*sizeof(byte));
   vx    = calloc2d (NVXLIMIT,P);
@@ -206,7 +208,7 @@ int main (int argc, char** argv){
 
   } 
 
-  write("result.bin",(const double**)xys,Ks,imsize,objsize,cut);
+  write(out,(const double**)xys,Ks,imsize,objsize,cut);
 
   return 0;
 }

@@ -40,17 +40,15 @@ int dpmeans(
   ){
 
   int    n,p,k,i;
-  int    kmin=-1,nmin=-1,Kt=1;
-  double val,min=1.0E200;
+  int    kmin=-1,Kt=1;
+  double min=1.0E200;
 
   assert(P==2||P==3);
 
   /* Initialization */
   for(n=0;n<N;n++){z[n]=0;l[n]=0;}
   for(k=0;k<N;k++){for(n=0;n<N;n++)d[n][k]=0;for(p=0;p<P;p++)m[k][p]=0;}
-  for(p=0;p<P;p++){for(n=0;n<N;n++)m[0][p]+=X[n][p];m[0][p]/=(double)N;} 
-  for(n=0;n<N;n++){val=wdist(X[n],m[0],P,dz);if(val<min){min=val;nmin=n;}}    /* Finding the nearest center */ 
-  for(p=0;p<P;p++)m[0][p]=X[nmin][p];
+  for(p=0;p<P;p++)m[0][p]=X[0][p];
   
   /* Main computation */
   for(i=0;i<nlp;i++){

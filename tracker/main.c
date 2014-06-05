@@ -64,7 +64,7 @@ int main (int argc, char** argv){
   double sgmt[3],sgms[3];
   int    wmax[3],wlik[3],objsize[3],margin[3];
   double alpha,beta,zscale;
-  int    seed,cut,dploop,N;
+  int    seed,cut,dploop,N,tune;
   char   in[256],out[256];
 
   int    imsize[4];
@@ -95,6 +95,7 @@ int main (int argc, char** argv){
   fscanf(fpp,"wlik:%d,%d,%d\n",      &wlik[0],&wlik[1],&wlik[2]);
   fscanf(fpp,"objsize:%d,%d,%d\n",   &objsize[0],&objsize[1],&objsize[2]);
   fscanf(fpp,"margin:%d,%d,%d\n",    &margin [0],&margin [1],&margin [2]);
+  fscanf(fpp,"tune:%d\n",            &tune);
   fscanf(fpp,"input:%s\n",           in);
   fscanf(fpp,"output:%s\n",          out);
   fclose(fpp);fpp=NULL; init_genrand(seed);
@@ -142,7 +143,6 @@ int main (int argc, char** argv){
   buf   = calloc   (K*N*P,sizeof(double));  
   tmp   = calloc   (N,    sizeof(double));
 
-  
   /* Construction of MRF tree */ 
   for(k1=0;k1<K;k1++)for(k2=0;k2<K;k2++) D[k1][k2]=wdist(x0[k1],x0[k2],P,zscale);
   mstree(G,(const double**)D,K); //gcenter(g[0],y,imsize);
@@ -150,9 +150,7 @@ int main (int argc, char** argv){
   findroot(&root,y,(const double**)x0,K,imsize,zscale); makeiter(V,U,(const int**)G,K,root);
   for(i=0;i<K;i++)for(p=0;p<P;p++){k=V[i];xyf[k][p]=xys[k][p]=x0[k][p];}
   for(i=0;i<K;i++){k=V[i];xyf[k][3]=xys[k][3]=gety(y,(const double*)x0[k],imsize);}Ks[0]=K;
-
   printf("root=%d\n",root+1);
-
    
   /* Spatial particle filter */
   for(t=1;t<T;t++){
@@ -200,15 +198,16 @@ int main (int argc, char** argv){
 
     }
 
-    smoothing(W2,tmp,(const int**)H,(const int**)Nf,(const int*)V,(const int*)U,K,N);
-    for(i=0;i<K;i++){k=V[i];
-      expectation (xs,(const double*)W2[k],(const double**)X[k],N);
-      for(p=0;p<P;p++)xys[k+t*K][p]=xs[p];xys[k+t*K][3]=gety(y,(const double*)xs,imsize);
+    /* Fine-tuning by k-means */ 
+    if(tune){
+      for(i=0;i<K;i++)for(p=0;p<P;p++)x0[i][p]=(double)xyf[i+t*K][p];
+      cutoff(y,imsize,cut);localmax(vx,&nvx,y,imsize,wmax); 
+      kmeans(lbl,x0,dist,nmem,(const double**)vx,nvx,K,P,zscale,dploop,tune);
+      for(i=0;i<K;i++){for(p=0;p<P;p++)xyf[i+t*K][p]=x0[i][p];xyf[i+t*K][3]=gety(y,(const double*)x0[i],imsize);}
     }
-
   } 
 
-  write(out,(const double**)xys,Ks,imsize,objsize,cut);
+  write(out,(const double**)xyf,Ks,imsize,objsize,cut);
 
   return 0;
 }

@@ -28,7 +28,7 @@
 int dpmeans(
       int           *  z,    /* OUTPUT: cluster id | size N           */ 
       double        ** m,    /* OUTPUT: means      | size K(N) x P    */
-      double        ** d,    /* OUTPUT: distance^2 | size N    x K(N) */
+      double        ** d,    /* OUTPUT: distance   | size N    x K(N) */
       int           *  l,    /* OUTPUT: #members   | size K(N)        */
       int           *  K,    /* OUTPUT: #clusters  | size 1           */ 
       const double  ** X,    /* INPUT : data       | size N   x P     */ 
@@ -71,6 +71,43 @@ int dpmeans(
   return 0;
 } 
 
+int kmeans(
+      int           *  z,    /* OUTPUT: cluster id | size N           */
+      double        ** m,    /* OUTPUT: means      | size K x P       */
+      double        ** d,    /* OUTPUT: distance   | size N x K       */
+      int           *  l,    /* OUTPUT: #members   | size K           */
+      const double  ** X,    /* INPUT : data       | size N   x P     */
+      const int        N,    /* INPUT : #samples   | size 1           */
+      const int        K,    /* INPUT : #clusters  | size 1           */
+      const int        P,    /* INPUT : #variables | size 1           */
+      const double     dz,   /* INPUT : zscale     | size 1           */
+      const int        nlp,  /* INPUT : #loops     | size 1           */
+      const double     lim   /* INPUT : dist limit | size 1           */
+  ){
+
+  int    n,p,k,i;
+  int    kmin=-1;
+  double min=1e200;
+
+  /* Main computation */
+  for(i=0;i<nlp;i++){
+    for(n=0;n<N;n++){min=1e200;kmin=-1;
+      for(k=0;k<K;k++)d[n][k]=wdist(X[n],m[k],P,dz);
+      for(k=0;k<K;k++)if(d[n][k]<min){min=d[n][k];kmin=k;}
+      z[n]=(min<lim)?kmin:-1;
+      //printf("%d\n",z[n]);
+    }
+    for(n=0;n<N;n++)l[n]=0;
+    for(n=0;n<N;n++)if(z[n]>=0)l[z[n]]++;
+
+    /* Update means */
+    for(k=0;k<K;k++)for(p=0;p<P;p++)if(l[k])    m[k][p]=0;
+    for(n=0;n<N;n++)for(p=0;p<P;p++)if(z[n]>=0) m[z[n]][p]+=X[n][p];
+    for(k=0;k<K;k++)for(p=0;p<P;p++)if(l[k])    m[k][p]/=(double)l[k];
+  }
+
+  return 0;
+}
   
 double wdist(const double * x1, const double * x2, const int P, const double dz){ 
   int p; double v,d=0.0; 

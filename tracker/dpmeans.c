@@ -89,13 +89,16 @@ int kmeans(
   int    kmin=-1;
   double min=1e200;
 
+  /* NOTE: This is k-means algorithm specialized for the fine-tuning */
+  /* of tracking results. To avoid tuning errors, a cluster mean is  */
+  /* not updated if all samples are 'lim' voxels away from the mean. */
+
   /* Main computation */
   for(i=0;i<nlp;i++){
     for(n=0;n<N;n++){min=1e200;kmin=-1;
       for(k=0;k<K;k++)d[n][k]=wdist(X[n],m[k],P,dz);
       for(k=0;k<K;k++)if(d[n][k]<min){min=d[n][k];kmin=k;}
       z[n]=(min<lim)?kmin:-1;
-      //printf("%d\n",z[n]);
     }
     for(n=0;n<N;n++)l[n]=0;
     for(n=0;n<N;n++)if(z[n]>=0)l[z[n]]++;

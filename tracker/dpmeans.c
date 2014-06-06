@@ -130,7 +130,7 @@ int localmax(double **vx, int *nvx, const byte *y, const int *imsize, const int 
 
   for(i=0;i<I;i++)for(j=0;j<J;j++)for(k=0;k<K;k++){l0=i+j*I+k*I*J;if(y[l0]==0) goto tag;
     for(a=-A;a<=A;a++)for(b=-B;b<=B;b++)for(c=-C;c<=C;c++){l=i+a+(j+b)*I+(k+c)*I*J;
-         if((i+a>=0)&&(i+a<I)&&(j+b>=0)&&(j+b<J)&&(k+c>=0)&&(k+c<K)&&l!=l0)if(y[l0]<y[l])goto tag;
+      if((i+a>=0)&&(i+a<I)&&(j+b>=0)&&(j+b<J)&&(k+c>=0)&&(k+c<K)&&l!=l0)if(y[l0]<y[l])goto tag;
     }
     vx[n][0]=(double)i;vx[n][1]=(double)j;vx[n][2]=(double)k;n++; tag:;
   }*nvx=n;

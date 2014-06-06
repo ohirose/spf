@@ -75,7 +75,7 @@ int main (int argc, char** argv){
   double **vx,**dist;
   double *eta,*eta0,*mov,**g;
   double **x0,***X,**W,**W2,**D,***noise; 
-  double **xyf,**xys,*xf,*xs,*xp;
+  double ***xyf,***xys,*xf,*xs,*xp;
   double *buf;
   int    **G,*U,*V,*Ks; 
   int    *nmem,*lbl,**Nf;
@@ -128,8 +128,8 @@ int main (int argc, char** argv){
   H     = calloc2i (K,N);                 // Particle history 
   D     = calloc2d (K,K);                 // Distance matrix 
   G     = calloc2i (K,K);                 // Graph (MST)
-  xyf   = calloc2d (K*T,P+1);             // Filter means
-  xys   = calloc2d (K*T,P+1);             // Smoother means
+  xyf   = calloc3d (T,K,P+1);             // Filter means
+  xys   = calloc3d (T,K,P+1);             // Smoother means
 
   xp    = calloc   (P,    sizeof(double));  // Prediction mean (buffer)
   xf    = calloc   (P,    sizeof(double));  // Filter     mean (buffer)
@@ -145,11 +145,11 @@ int main (int argc, char** argv){
 
   /* Construction of MRF tree */ 
   for(k1=0;k1<K;k1++)for(k2=0;k2<K;k2++) D[k1][k2]=wdist(x0[k1],x0[k2],P,zscale);
-  mstree(G,(const double**)D,K); //gcenter(g[0],y,imsize);
+  mstree(G,(const double**)D,K); 
 
   findroot(&root,y,(const double**)x0,K,imsize,zscale); makeiter(V,U,(const int**)G,K,root);
-  for(i=0;i<K;i++)for(p=0;p<P;p++){k=V[i];xyf[k][p]=xys[k][p]=x0[k][p];}
-  for(i=0;i<K;i++){k=V[i];xyf[k][3]=xys[k][3]=gety(y,(const double*)x0[k],imsize);}Ks[0]=K;
+  for(i=0;i<K;i++)for(p=0;p<P;p++){k=V[i];xyf[0][k][p]=xys[0][k][p]=x0[k][p];}
+  for(i=0;i<K;i++){k=V[i];xyf[0][k][3]=xys[0][k][3]=gety(y,(const double*)x0[k],imsize);}Ks[0]=K;
   printf("root=%d\n",root+1);
    
   /* Spatial particle filter */
@@ -165,10 +165,10 @@ int main (int argc, char** argv){
       /* Prediction */
       if(i){
         for(p=0;p<P;p++){
-          eta [p]=xyf[k+(t-1)*K][p]-xyf[u+(t-1)*K][p];
-          eta0[p]=xyf[k        ][p]-xyf[u        ][p];
+          eta [p]=xyf[t-1][k][p]-xyf[t-1][u][p];
+          eta0[p]=xyf  [0][k][p]-xyf  [0][u][p];
           mov [p]=alpha*eta[p]+(1-alpha)*eta0[p];
-          xp  [p]=xyf[u+t*K][p]+mov[p];
+          xp  [p]=xyf[t][u][p]+mov[p];
         }
         ofs=0;
         for(n=0;n<N;n++){n1=Nf[u][n];
@@ -181,7 +181,7 @@ int main (int argc, char** argv){
         }
       } 
       else for(n=0;n<N;n++)for(p=0;p<P;p++)  
-        X[k][n][p]=xyf[k+(t-1)*K][p]+(g[t][p]-g[t-1][p])+noise[k][n][p]; 
+        X[k][n][p]=xyf[t-1][k][p]+(g[t][p]-g[t-1][p])+noise[k][n][p]; 
     
       /* Filtering */
       if(objinimage(xp,imsize,objsize,margin)){
@@ -194,16 +194,16 @@ int main (int argc, char** argv){
       else for(n=0;n<N;n++)Nf[k][n]=1;             
 
       expectation_i(xf,(const int*)Nf[k],(const double**)X[k],N);
-      for(p=0;p<P;p++)xyf[k+t*K][p]=xf[p];xyf[k+t*K][3]=gety(y,(const double*)xf,imsize);
+      for(p=0;p<P;p++)xyf[t][k][p]=xf[p];xyf[t][k][3]=gety(y,(const double*)xf,imsize);
 
     }
 
     /* Fine-tuning by k-means */ 
     if(tune){
-      for(i=0;i<K;i++)for(p=0;p<P;p++)x0[i][p]=(double)xyf[i+t*K][p];
+      for(i=0;i<K;i++)for(p=0;p<P;p++)x0[i][p]=(double)xyf[t][i][p];
       cutoff(y,imsize,cut);localmax(vx,&nvx,y,imsize,wmax); 
       kmeans(lbl,x0,dist,nmem,(const double**)vx,nvx,K,P,zscale,dploop,tune);
-      for(i=0;i<K;i++){for(p=0;p<P;p++)xyf[i+t*K][p]=x0[i][p];xyf[i+t*K][3]=gety(y,(const double*)x0[i],imsize);}
+      for(i=0;i<K;i++){for(p=0;p<P;p++)xyf[t][i][p]=x0[i][p];xyf[t][i][3]=gety(y,(const double*)x0[i],imsize);}
     }
   } 
 

@@ -24,10 +24,10 @@
 #include"util.h"
 #define LIMIT 5000000
 
-int write(char *file, const double **Xyall, const int *Kall, 
-                      const int    *imsize, const int *trsize, const int cut){ 
+int write(char *file, const double ***Xyall, const int *Kall, 
+                      const int     *imsize, const int *trsize, const int cut){ 
    
-  int y,k,k1,l,m,n,t,K,L,M,N,A,B,C,T,off=0;
+  int y,k,l,m,n,t,K,L,M,N,A,B,C,T,off=0;
   int *buf; 
   FILE *fp  = fopen(file,"wb");
 
@@ -41,11 +41,11 @@ int write(char *file, const double **Xyall, const int *Kall,
 
   for(t=0;t<T;t++){
     K=Kall[t];buf[0]=t;buf[1]=K; fwrite(buf,sizeof(int),2,fp);
-    for(k=0;k<K;k++){k1=k+off;
-      l=(int)floor(Xyall[k1][0]);
-      m=(int)floor(Xyall[k1][1]);
-      n=(int)floor(Xyall[k1][2]);
-      y=(int)Xyall[k1][3];
+    for(k=0;k<K;k++){
+      l=(int)floor(Xyall[t][k][0]);
+      m=(int)floor(Xyall[t][k][1]);
+      n=(int)floor(Xyall[t][k][2]);
+      y=(int)floor(Xyall[t][k][3]);
    
       buf[0]=l;buf[1]=m;buf[2]=n;buf[3]=y;fwrite(buf,sizeof(int),4,fp);
     }

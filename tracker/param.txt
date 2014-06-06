@@ -10,7 +10,6 @@ wmax:1,1,1
 wlik:1,1,1
 objsize:7,7,2
 margin:3,3,0
-tune:9
+tune:4
 input:data.bin
 output:result.bin
-

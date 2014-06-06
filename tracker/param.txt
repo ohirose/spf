@@ -1,4 +1,4 @@
-seed:1
+seed:2
 cutoff:50
 dploop:10
 N:1000
@@ -10,7 +10,6 @@ wmax:1,1,1
 wlik:1,1,1
 objsize:7,7,2
 margin:3,3,0
-tune:9
-input:data.bin
+tune:3
+input:/Users/hirose/Dropbox/Kawaguchi/20140107/image/mCherry_normalize_1000.dat
 output:result.bin
-

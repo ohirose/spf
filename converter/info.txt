@@ -1,6 +1,6 @@
-prefix:CFP/S_X
+prefix:mCherry_TIFs/
 imtype:tif
-offset:1
-imsize:512,256,20,50
+number:1,10,1
+imsize:512,256,20,990
 window:1,1,1
 output:data.bin

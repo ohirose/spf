@@ -29,7 +29,7 @@ double  median (double *a, double *w, const int N);
 int main(int argc, char **argv) {
   int      ct,l,N,M,a,b,c,i,j,k,t,A,B,C,I,J,K,T;
   double   *y0,*y1,*w0,*w1,max,mean,val,scale;
-  int      ofs,size[4],wind[3];
+  int      num[3],size[4],wind[3];
   char     fn[1024],pfx[1024],typ[64],out[1024];
   FILE     *fpo,*fpp;
   byte     *buf;
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   if(!(fpp=fopen("info.txt", "r"))){printf("File: \'info.txt\' Not Found.\n");exit(1);}
   fscanf(fpp,"prefix:%s\n",         pfx);
   fscanf(fpp,"imtype:%s\n",         typ);
-  fscanf(fpp,"offset:%d\n",         &ofs); ofs++;
+  fscanf(fpp,"number:%d,%d,%d\n",   &num [0],&num [1],&num [2]);
   fscanf(fpp,"imsize:%d,%d,%d,%d\n",&size[0],&size[1],&size[2],&size[3]);
   fscanf(fpp,"window:%d,%d,%d\n",   &wind[0],&wind[1],&wind[2]);
   fscanf(fpp,"output:%s\n",         out);
@@ -54,8 +54,9 @@ int main(int argc, char **argv) {
   fpo=fopen(out,"wb"); fwrite(size,sizeof(int),4,fpo);
   for(t=0;t<T;t++){printf("t=%d\n",t+1);
     /* Load images */
-    for(k=0;k<K;k++){l=k+t*K+ofs;
-      sprintf(fn,"%s%d.%s",pfx,l,typ); 
+    for(k=0;k<K;k++){l=k+t*K+num[1];
+      if(num)sprintf(fn,"%st%.4d_z%.2d.%s",pfx,t+num[1],k+num[2],typ);
+      else   sprintf(fn,"%s%d.%s",         pfx,l+num[1],         typ); 
       img=cvLoadImage(fn,CV_LOAD_IMAGE_ANYCOLOR|CV_LOAD_IMAGE_ANYDEPTH);
       for(i=0;i<I;i++)for(j=0;j<J;j++) y0[i+j*I+(K-k-1)*I*J]=(double)cvGet2D(img,J-j-1,i).val[0]; 
       cvReleaseImage(&img);

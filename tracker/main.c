@@ -86,6 +86,7 @@ int main (int argc, char** argv){
   fscanf(fpp,"seed:%d\n",            &seed);
   fscanf(fpp,"cutoff:%d\n",          &cut);
   fscanf(fpp,"dploop:%d\n",          &dploop);
+  fscanf(fpp,"root:%d\n",            &root); root--;
   fscanf(fpp,"N:%d\n",               &N);
   fscanf(fpp,"alpha:%lf\n",          &alpha);
   fscanf(fpp,"beta:%lf\n",           &beta);
@@ -147,7 +148,7 @@ int main (int argc, char** argv){
   for(k1=0;k1<K;k1++)for(k2=0;k2<K;k2++) D[k1][k2]=wdist(x0[k1],x0[k2],P,zscale);
   mstree(G,(const double**)D,K); 
 
-  findroot(&root,y,(const double**)x0,K,imsize,zscale); makeiter(V,U,(const int**)G,K,root);
+  if(root<0)findroot(&root,y,(const double**)x0,K,imsize,zscale); makeiter(V,U,(const int**)G,K,root);
   for(i=0;i<K;i++)for(p=0;p<P;p++){k=V[i];xyf[0][k][p]=xys[0][k][p]=x0[k][p];}
   for(i=0;i<K;i++){k=V[i];xyf[0][k][3]=xys[0][k][3]=gety(y,(const double*)x0[k],imsize);}Ks[0]=K;
   printf("root=%d\n",root+1);
@@ -174,20 +175,20 @@ int main (int argc, char** argv){
         for(n=0;n<N;n++){n1=Nf[u][n];
           if(n1)for(j=0;j<n1;j++){assert(ofs>=0&&j+ofs<N); H[k][j+ofs]=n;
             for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]+noise[k][n][p];
-            if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rad) /* Avoiding collisions */
+            if(wdist(X[k][j+ofs],X[u][n],P,zscale)<0.8*rad) /* Avoiding collisions */
               for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]-0.5*noise[k][n][p];
           }
           ofs+=n1;
         }
       } 
-      else for(n=0;n<N;n++)for(p=0;p<P;p++)  
-        X[k][n][p]=xyf[t-1][k][p]+(g[t][p]-g[t-1][p])+noise[k][n][p]; 
+      else {
+        for(p=0;p<P;p++)xp[p]=xyf[t-1][k][p]+g[t][p]-g[t-1][p];
+        for(n=0;n<N;n++)for(p=0;p<P;p++) X[k][n][p]=xyf[t-1][k][p]+(g[t][p]-g[t-1][p])+noise[k][n][p]; 
+      }
     
+      nf=N; 
       /* Filtering */
       if(objinimage(xp,imsize,objsize,margin)){
-        swaponoff  (X[k],W[k],&nf,N*(1-beta));       
-        revert     (X[k],xp,   nf,N*(1-beta));
-        for(n=nf;n<N;n++) Nf[k][n]=1;               
         filtering  (W[k],N,nf,y,(const double**)X[k],wlik,imsize);
         resampling (Nf[k],W[k],nf); 
       }
@@ -311,7 +312,7 @@ int filtering(double *W, const int N, const int nf,
   }
 
   for(n=0;n<nf;n++)if(W[n]>max) max=W[n];
-  if(max){
+  if(max>0){
     for(n=0;n<nf;n++)W[n]-=max;
     for(n=0;n<nf;n++)W[n]=exp(-W[n]*W[n]);
     for(n=0;n<nf;n++)val+=W[n];

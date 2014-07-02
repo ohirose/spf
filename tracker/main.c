@@ -65,7 +65,7 @@ int main (int argc, char** argv){
   int    wmax[3],wlik[3],objsize[3],margin[3];
   double alpha,beta,zscale;
   int    seed,cut,dploop,N,tune;
-  char   in[256],out[256];
+  char   in[256],out[256],out2[256];
 
   int    imsize[4];
   int    i,j,t,k,n,n1,p,T,K,k1,k2,u,nf,L,ofs;
@@ -99,6 +99,7 @@ int main (int argc, char** argv){
   fscanf(fpp,"tune:%d\n",            &tune);
   fscanf(fpp,"input:%s\n",           in);
   fscanf(fpp,"output:%s\n",          out);
+  fscanf(fpp,"output2:%s\n",         out2);
   fclose(fpp);fpp=NULL; init_genrand(seed);
   rad=objsize[0]/2; zscale=objsize[0]/objsize[2];
 
@@ -158,6 +159,7 @@ int main (int argc, char** argv){
     if(t%10==9) fprintf(stderr,"t=%d\n",t+1);
     fread(y,L,sizeof(byte),fp); gcenter(g[t],y,imsize); 
 
+  //printf("t=%d\n",t);
     normal(buf,K*N*P);Ks[t]=K;
     for(i=0;i<K;i++)for(n=0;n<N;n++)for(p=0;p<P;p++)
       noise[V[i]][n][p]=buf[i+n*K+p*K*N]*((V[i]==root)?sgmt[p]:sgms[p]); 
@@ -199,6 +201,14 @@ int main (int argc, char** argv){
 
     }
 
+    /* Backward refinement */
+    smoothing(W2,tmp,(const int**)H,(const int**)Nf,(const int*)V,(const int*)U,K,N);
+    for(i=0;i<K;i++){k=V[i];
+      expectation (xs,(const double*)W2[k],(const double**)X[k],N);
+      for(p=0;p<P;p++)xys[t][k][p]=xs[p];
+      xys[t][k][3]=gety(y,(const double*)xs,imsize);
+    }
+
     /* Fine-tuning by k-means */ 
     if(tune){
       for(i=0;i<K;i++)for(p=0;p<P;p++)x0[i][p]=(double)xyf[t][i][p];
@@ -208,7 +218,7 @@ int main (int argc, char** argv){
     }
   } 
 
-  write(out,(const double**)xyf,Ks,imsize,objsize,cut);
+  write(out, (const double**)xyf,Ks,imsize,objsize,cut);
 
   return 0;
 }
@@ -242,10 +252,11 @@ int smoothing(double **W2, int *buf,
     for(n=0;n<N;n++)buf[n]=0;
     for(n=0;n<N;n++)buf[H[k][n]]+=Nf[k][n];
     for(n=0;n<N;n++)W2 [U[k]][n]*=buf[n];
-    if(allzero(W2[k],N))for(n=0;n<N;n++) W2[k][n]=Nf[k][n];
+    if(allzero(W2[U[k]],N))for(n=0;n<N;n++) W2[U[k]][n]=Nf[k][n];
   }
   for(k=0;k<K;k++){val=0;
     for(n=0;n<N;n++)val+=W2[k][n];
+    assert(fabs(val)>1e-10);
     for(n=0;n<N;n++)W2[k][n]/=val;
   }
 

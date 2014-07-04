@@ -20,7 +20,9 @@ int main(int argc, char** argv){
     printf("Frame: %.3d (#targets=%d)\n",t,K);
 
     fread(buf,sizeof(int),4*K,fp); 
-    for(k=0;k<K;k++)for(i=0;i<4;i++) printf("%3d%c",buf[4*k+i],i==3?'\n':' ');
+    for(k=0;k<K;k++)for(i=0;i<4;i++) 
+      if(argc>2) printf("%d%c", buf[4*k+i],i==3?'\n':'\t');
+      else       printf("%3d%c",buf[4*k+i],i==3?'\n':' ' );
     printf("\n");
   }
 

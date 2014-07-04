@@ -81,7 +81,7 @@ int main (int argc, char** argv){
   int    *nmem,*lbl,**Nf;
   int    **H,*tmp;
 
-  fpp=fopen("param.txt", "r");if(!fpp){printf("File: \'param.txt\' Not Found.\n"); exit(1);}
+  fpp=fopen("conf-track.txt", "r");if(!fpp){printf("File: \'conf-track.txt\' Not Found.\n"); exit(1);}
 
   fscanf(fpp,"seed:%d\n",            &seed);
   fscanf(fpp,"cutoff:%d\n",          &cut);

@@ -1,0 +1,12 @@
+imsize:512,256,20,100
+K:104
+root:21
+seed:1
+alpha:0.7
+beta:0.0
+sgmt:0.6,0.4,0.001
+sgms:0.6,0.4,0.001
+objsize:7,7,3
+init:init.txt
+data:sim.bin
+traj:traj.bin

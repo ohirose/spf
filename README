@@ -8,8 +8,9 @@ convert, track, and view. The first and second software are implemented
 in C while the third is implemented in C++. OpenCV 2.4+ is used for
 `convert'. OpenCV 3.3+ and freeglut are used for `view'. 
 
-==== convert ============================================================
-
+o-----------------------------------------------------------------------o
+|                             convert                                   |
+o-----------------------------------------------------------------------o
 The first software `convert' converts a set of 2D images that compose 4D 
 live-cell imaging data into a single file encoded as our original binary 
 format. The software `convert' utilizes OpenCV 2.4.9 only for loading 
@@ -17,8 +18,8 @@ original image files, and thereby all the image file formats to which
 OpenCV 2.4.9 supports can be converted. During conversion, average 
 subtraction and 3D median filter can be optionally applied for each 3D 
 image in order to remove background noise and salt-and-pepper noise. We 
-implemented a linear-time algorithm for computing median to make 3D median 
-filter faster. 
+implemented a linear-time algorithm for computing median to make 3D 
+median filter faster. 
 
 COMPILATION:
 
@@ -39,13 +40,14 @@ USAGE:
 
 2. Type `./convert' in the terminal window.
 
-==== track ==============================================================
-
+o-----------------------------------------------------------------------o
+|                             track                                     |
+o-----------------------------------------------------------------------o
 The second software 'track' is the main software for automatic detection 
 and tracking of multiple cells based on the SPF algorithm from the 
 converted 4D image file. For details of the algorithm, please refer to 
-the article titled ``SPF-CellTracker: Multiple cell tracking with a spatial 
-particle filter'' (in submission). 
+the article titled ``SPF-CellTracker: Multiple cell tracking with a 
+spatial particle filter'' (in submission). 
 
 COMPILATION:
 
@@ -61,13 +63,14 @@ USAGE:
 
 2. Type `./track' in the terminal window.
 
-==== view ===============================================================
-
-The third software `view' is to visualize the 4D image data with a tracking 
-result. This software allows us to zoom in, zoom out, and rotate 4D image 
-during playing 4D image data. Currently, only a binary file for Mac OS X 
-is available for the software `view'. We will distribute source codes in 
-the near future.  
+o-----------------------------------------------------------------------o
+|                             view                                      |
+o-----------------------------------------------------------------------o
+The third software `view' is to visualize the 4D image data with a 
+tracking result. This software allows us to zoom in, zoom out, and rotate 
+4D image during playing 4D image data. Currently, only a binary file for 
+Mac OS X is available for the software `view'. We will distribute source 
+codes in the near future.  
 
 INSTALL (Mac only):
 
@@ -85,6 +88,7 @@ USAGE:
 2. Type the following command:
 
   ./view input-file-name trajectory-file-name  
+
 
 
 

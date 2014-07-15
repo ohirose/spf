@@ -1,52 +1,86 @@
-Spatial particle filter: A method for tracking multi-targets from 4D live cell imaging data.
+
+This is a software suite for tracking more than a hundred of cells from 4D live cell 
+imaging data with following characteristics: (1) gray scale image, (2) globular-like cell shapes,
+(3) strong covariation of cells to be tracked, (4) no background image except background
+noise and salt-and-pepper noise. This software suite is composed of three executables: 
+convert, track, and view. The first and second software are implemented in C 
+while the third is implemented in C++. OpenCV 2.4+ is used for
+`convert'. OpenCV 3.3+ and freeglut are used for `view'. 
+
+==== convert ==================================================
+
+The first software `convert' converts a set of 2D images that compose 4D live-cell imaging 
+data into a single file encoded as our original binary format. The software `convert' 
+utilizes OpenCV 2.4.9 only for loading original image files, and thereby
+all the image file formats to which OpenCV 2.4.9 supports can be converted.
+During conversion, average subtraction and 3D median filter can be optionally 
+applied for each 3D image in order to remove background noise and salt-and-pepper noise.
+We implemented a linear-time algorithm for computing median to make 3D median filter faster. 
 
 COMPILATION:
 
-1. Get all the source codes registered in 'tracker' directory of this repositry 
+1. Install OpenCV 2.4+.
+
+2. Get all the source codes registered in `converter' directory of this repository 
    and move them to the current directory.
 
-2. Type 'make'. Then you get the binary file 'track' for tracking multi-objects.
+3. Modify paths to OpenCV library and header files indicated by `LIBPATH' and `INCLUDE' in `makefile' if needed. 
 
-
-INPUT DATA FORMAT:
-
-The format of input 4D image should be encoded in the following binary format:  
-  
-I: The number of voxels along x axis (int: 4 bytes)  
-J: The number of voxels along y axis (int: 4 bytes)  
-K: The number of voxels along z axis (int: 4 bytes)  
-T: The number of frames (int: 4 bytes)  
-s: The signal intensity of voxel (i,j,k)=(  0,  0,  0) at time t=0 (usigned char: 1 byte)  
-s: The signal intensity of voxel (i,j,k)=(  1,  0,  0) at time t=0 (usigned char: 1 byte)  
-...  
-s: The signal intensity of voxel (i,j,k)=(I-1,  0,  0) at time t=0 (usigned char: 1 byte)  
-s: The signal intensity of voxel (i,j,k)=(  0,  1,  0) at time t=0 (usigned char: 1 byte)  
-...  
-s: The signal intensity of voxel (i,j,k)=(I-1,J-1,  0) at time t=0 (usigned char: 1 byte)  
-...  
-s: The signal intensity of voxel (i,j,k)=(I-1,J-1,K-1) at time t=0 (usigned char: 1 byte)  
-s: The signal intensity of voxel (i,j,k)=(  0,  0,  0) at time t=1 (usigned char: 1 byte)  
-...  
-s: The signal intensity of voxel (i,j,k)=(I-1,J-1,K-1) at time t=T-1 (usigned char: 1 byte)  
-
-** NOTE:  
-** Signal values MUST range from 0 to 255.    
-** Separators such as '\t' and '\n' must NOT be inserted.  
-
+4. Type `make' in the terminal window.
 
 USAGE:
 
-In the current directory, type the folloing command:  
+1. Modify the configuration file `conf-convert.txt' according to your preference.
 
-./track input-file-name
+2. Type `./convert' in the terminal window.
 
-If the tracking is finished, the output file 'result.bin' is output.
-Then, type the following command:  
 
-./view input-file-name result.bin  
 
-Currently, this viewer is for Mac only ('Xquartz' MUST be installed beforehand). 
-A sample input file 'sample4D.bin' is available at 
-https://sites.google.com/site/webosamuhirose/home/data
+==== track ====================================================
+
+The second software 'track' is the main software for automatic detection and tracking of
+multiple cells based on the SPF algorithm from the converted 4D image file. 
+For details of the algorithm, please refer to the article titled ``SPF-CellTracker: 
+Multiple cell tracking with a spatial particle filter'' (in submission). 
+
+COMPILATION:
+
+1. Get all the source codes registered in `tracker' directory of this repository 
+   and move them to the current directory.
+
+2. Type `make' in the terminal window.
+
+USAGE:
+
+1. Modify the configuration file `conf-track.txt' according to your preference.
+
+2. Type `./track' in the terminal window.
+
+
+
+==== view ====================================================
+
+The third software `view' is to visualize the 4D image data with a tracking result. 
+This software allows us to zoom in, zoom out, and rotate 4D image during playing 4D image data. 
+Currently, only a binary file for Mac OS X is available for the software `view' 
+We will distribute source codes in the near future.  
+
+INSTALL (Mac only):
+
+1. Install the software `Xquartz', an implementation of X window system which runs on OS X. 
+
+2. Get the binary file `view' in `bin/Mac' directory of this repository 
+and move it to the current directory.
+
+USAGE:
+
+1. Put a 4D image file converted by `convert' and a trajectory file output by `tracker'
+in the current directory.
+
+2. Type the following command:
+
+  ./view input-file-name trajectory-file-name  
+
+
 
 

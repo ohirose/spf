@@ -35,8 +35,6 @@ int    findroot     (int *root, const byte *y,
 int    gcenter      (double *g, const byte *y, const int *imsize);
 double gety         (const byte *y, const double *x, const int *imsize);
 int    normal       (double *v, int nv);
-int    swaponoff    (double **X, double *W, int *Non, const int N);
-int    revert       (double **X, const double *xp, const int Non, const int N);
 int    filtering    (double *W, const int N, const int nf, 
                      const byte *y, const double **X, const int* wlik,const int *imsize);
 int    resampling   (int *nums, const double *W, const int N);
@@ -65,7 +63,7 @@ int main (int argc, char** argv){
   int    wmax[3],wlik[3],objsize[3],margin[3];
   double alpha,beta,zscale;
   int    seed,cut,dploop,N,tune;
-  char   in[256],out[256],out2[256];
+  char   in[256],out[256];
 
   int    imsize[4];
   int    i,j,t,k,n,n1,p,T,K,k1,k2,u,nf,L,ofs;
@@ -82,7 +80,6 @@ int main (int argc, char** argv){
   int    **H,*tmp;
 
   fpp=fopen("conf-track.txt", "r");if(!fpp){printf("File: \'conf-track.txt\' Not Found.\n"); exit(1);}
-
   fscanf(fpp,"seed:%d\n",            &seed);
   fscanf(fpp,"cutoff:%d\n",          &cut);
   fscanf(fpp,"dploop:%d\n",          &dploop);
@@ -99,14 +96,11 @@ int main (int argc, char** argv){
   fscanf(fpp,"tune:%d\n",            &tune);
   fscanf(fpp,"input:%s\n",           in);
   fscanf(fpp,"output:%s\n",          out);
-  fscanf(fpp,"output2:%s\n",         out2);
   fclose(fpp);fpp=NULL; init_genrand(seed);
   rad=objsize[0]/2; zscale=objsize[0]/objsize[2];
 
   fp =fopen(in,"rb");if(!fp){printf("File: \'%s\' Not Found.\n",in);exit(1);}
-
-  fread(imsize,sizeof(int),4,fp); 
-  L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
+  fread(imsize,sizeof(int),4,fp); L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
   printf("T=%d\n",T);
 
   y     = malloc   (L*sizeof(byte));
@@ -121,6 +115,7 @@ int main (int argc, char** argv){
   fread(y,L,sizeof(byte),fp);
   gcenter(g[0],y,imsize);cutoff(y,imsize,cut);localmax(vx,&nvx,y,imsize,wmax); 
   dpmeans (lbl,x0,dist,nmem,&K,(const double**)vx,nvx,P,objsize[1],zscale,dploop);
+  printf("K=%d\n",K);
 
   X     = calloc3d (K,N,P);               // Particles
   noise = calloc3d (K,N,P);               // 
@@ -159,7 +154,6 @@ int main (int argc, char** argv){
     if(t%10==9) fprintf(stderr,"t=%d\n",t+1);
     fread(y,L,sizeof(byte),fp); gcenter(g[t],y,imsize); 
 
-  //printf("t=%d\n",t);
     normal(buf,K*N*P);Ks[t]=K;
     for(i=0;i<K;i++)for(n=0;n<N;n++)for(p=0;p<P;p++)
       noise[V[i]][n][p]=buf[i+n*K+p*K*N]*((V[i]==root)?sgmt[p]:sgms[p]); 
@@ -287,26 +281,6 @@ int objinimage(const double *x, const int *imsize, const int *objsize, const int
   return    x[0]-objsize[0]-margin[0]>=0 &&  x[0]+objsize[0]+margin[0]<imsize[0]
          && x[1]-objsize[1]-margin[1]>=0 &&  x[1]+objsize[1]+margin[1]<imsize[1]
          && x[2]-objsize[2]-margin[2]>=0 &&  x[2]+objsize[2]+margin[2]<imsize[2];
-}
-
-int swaponoff(double **X, double *W, int *Non, const int N){
-  int i=0,j=N-1,ct=0; double *tmp,val;
-
-  while(1){ 
-    while(i<N && W[i]> 1.0e-9) i++; 
-    while(j>=0&& W[j]<=1.0e-9) j--; 
-    if(i<j){ct++;
-      tmp=X[j];X[j]=X[i];X[i]=tmp;
-      val=W[j];W[j]=W[i];W[i]=val;
-    } 
-    else break;
-  }*Non=N-ct;
-
-  return 0;
-}
-
-int revert(double **X, const double *xp, const int Non, const int N){
-  int n,p,P=3; for(n=Non-1;n<N;n++)for(p=0;p<P;p++) X[n][p]=xp[p]; return 0;
 }
 
 int filtering(double *W, const int N, const int nf, 

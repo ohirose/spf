@@ -6,7 +6,7 @@ be tracked, (4) no background image except background noise and salt-
 and-pepper noise. This software suite is composed of three executables: 
 convert, track, and view. The first and second software are implemented 
 in C while the third is implemented in C++. OpenCV 2.4+ is used for
-`convert'. OpenCV 3.3+ and freeglut are used for `view'. 
+`convert'. OpenGL 3.3+ and freeglut are used for `view'. 
 
 o-----------------------------------------------------------------------o
 |                             convert                                   |

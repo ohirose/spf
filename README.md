@@ -23,7 +23,7 @@ conversion, average subtraction and 3D median filter can be optionally applied f
 each 3D image in order to remove background noise and salt-and-pepper noise. We
 implemented a linear-time algorithm for computing median to make 3D median filter faster.
 
-### COMPILATION:
+COMPILATION:
 
 1. Install OpenCV 2.4+.
 
@@ -36,7 +36,7 @@ implemented a linear-time algorithm for computing median to make 3D median filte
 4. Type `make` in the terminal window.
 
 
-### USAGE:
+USAGE:
 
 1. Modify the configuration file **conf-convert.txt** according to your preference.
 
@@ -48,14 +48,14 @@ multiple cells based on the SPF algorithm from the converted 4D image file. For 
 the algorithm, please refer to the article titled *SPF-CellTracker: Multiple cell tracking with a
 spatial particle filter* (in submission).
 
-### COMPILATION:
+COMPILATION:
 
 1. Get all the source codes registered in **tracker** directory of this
    repository and move them to the current directory.
 
 2. Type `make` in the terminal window.
 
-### USAGE:
+USAGE:
 
 1. Modify the configuration file `conf-track.txt` according to your preference.
 
@@ -69,7 +69,7 @@ tracking result. This software allows us to zoom in, zoom out, and rotate
 Mac OS X is available for the software *view*. We will distribute source
 codes in the near future.
 
-### INSTALL (Mac only):
+INSTALL (Mac only):
 
 1. Install the software **Xquartz**, an implementation of X window system 
    which runs on OS X. 
@@ -77,7 +77,7 @@ codes in the near future.
 2. Get the binary file **view** in **bin/Mac** directory of this repository 
    and move it to the current directory.
 
-### USAGE:
+USAGE:
 
 1. Put a 4D image file converted by *convert* and a trajectory file output 
    by *tracker* in the current directory.

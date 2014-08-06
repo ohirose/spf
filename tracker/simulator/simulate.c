@@ -23,10 +23,10 @@
 #include<math.h>
 #include<assert.h>
 
-#include"util.h"
-#include"tree.h"
-#include"dpmeans.h"
-#include"io.h"
+#include"../util.h"
+#include"../tree.h"
+#include"../dpmeans.h"
+#include"../io.h"
 
 #define NVXLIMIT 2048
 

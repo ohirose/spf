@@ -9,6 +9,10 @@ imaging data with following characteristics:
 3. strong covariation of cells to be tracked, 
 4. no background image except background noise and salt- and-pepper noise. 
 
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=NXS0YN-3wrE" 
+target="_blank"><img src="http://img.youtube.com/vi/NXS0YN-3wrE/0.jpg" 
+alt="Visualization of neurons in a nematode, C. elegans." width="300" height="240" border="10" /></a>
+
 This software suite is composed of three executables: **convert**, **track**, and **view**.
 The first and second software are implemented in C while the third is implemented in C++.
 OpenCV 2.4+ is used for *convert*. OpenGL 3.3+ and freeglut are used for *view*.
@@ -69,7 +73,7 @@ are 512x256, 20, and 1000, respectively.
 - sbmean: Whether or not the average intensity of each 2D image is subtracted (1 or 0) from the image.
   - For removing the background noise whose level is dependent on the value of *z*-axis. 
 - median: Specifies window size used for 3D median filter for removing salt and pepper noise. 
-  - `median:l,m,n`--> The windows size become (2l+1, 2m+1,2n+1). 
+  - `median:l,m,n`--> The window size becomes (2l+1, 2m+1,2n+1). 
   - `median:0,0,0`--> 3D median filter is skipped.
   - `median:1,1,0`--> 2D median filter with window size 3x3 for each 2D image.
 - inform: Whether or not file names of input 2D images that are correctly read is printed. 
@@ -100,7 +104,7 @@ time and value of *z*-axis, respectively. Serial numbers for time and *z*-value 
 integers specified by the second and third values of `number`, respectively. The number of time points 
 and the number of *z*-values are indicated by the third and fourth values of `imsize`. 
 In the second case, the first and third values must be 0. Serial numbers of *z* are incremented
-in the order of *z*size\*t+z. These can start from any of non-negative integers specified by
+in the order of zsize\*t+z. These can start from any of non-negative integers specified by
 the second value of `number`. 
  
 

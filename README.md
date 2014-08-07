@@ -106,7 +106,7 @@ the first value of `number` must be 1. Symbols 't' and 'z' in the image file nam
 time and value of *z*-axis, respectively. Serial numbers for time and *z*-value can start from any of non-negative
 integers specified by the second and third values of `number`, respectively. The number of time points 
 and the number of *z*-values are indicated by the third and fourth values of `imsize`. 
-In the second case, the first and third values must be 0. Serial numbers of *z* are incremented
+In the second case, the first and third values must be 0. Serial numbers are incremented
 in the order of zsize\*t+z. These can start from any of non-negative integers specified by
 the second value of `number`. 
  

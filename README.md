@@ -9,8 +9,11 @@ imaging data with following characteristics:
 3. strong covariation of cells to be tracked, 
 4. no background image except background noise and salt- and-pepper noise. 
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=NXS0YN-3wrE" 
-target="_blank"><img src="http://img.youtube.com/vi/NXS0YN-3wrE/0.jpg" 
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=JVTLNgwlkwg" 
+target="_blank"><img src="http://img.youtube.com/vi/JVTLNgwlkwg/0.jpg" 
+alt="Visualization of neurons in a nematode, C. elegans." width="300" height="240" border="10" /></a>
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=Bl71eWAzfDQ" 
+target="_blank"><img src="http://img.youtube.com/vi/Bl71eWAzfDQ/0.jpg" 
 alt="Visualization of neurons in a nematode, C. elegans." width="300" height="240" border="10" /></a>
 
 This software suite is composed of three executables: **convert**, **track**, and **view**.

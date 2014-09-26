@@ -25,7 +25,7 @@ OpenCV 2.4+ is used for *convert*. OpenGL 3.3+ and freeglut are used for *view*.
 The first software **convert** converts a set of 2D images that compose 4D live-cell
 imaging data into a single file encoded as our original binary format. The software
 *convert* utilizes OpenCV 2.4+ only for loading original image files, and thereby
-all the image file formats which OpenCV 2.4.9 supports can be converted. 
+all the image file formats which OpenCV 2.4+ supports can be converted. 
 During conversion, average subtraction for each 2D image and 3D median filter for
 each set of 2D images that compose a 3D image can be optionally applied.
 The average subtraction removes back ground noise whose level is strongly dependent on 
@@ -145,7 +145,7 @@ The parameters of *track* can be set in **conf-track.txt**. The file format is a
     seed:1
     cutoff:40
     dploop:10
-    root:0
+    root:-1
     N:1000
     alpha:0.7
     beta:0.05
@@ -165,7 +165,7 @@ The parameters of *track* can be set in **conf-track.txt**. The file format is a
 - dploop: The number of iterations for DP-means algorithm.
   - DP-means algorithm is used for cell detection and counting. 
 - root: The cell ID which is initially tracked for each time point.
-  - `root:0`--> The root cell ID is automatically defined. 
+  - `root:-1`--> The root cell ID is automatically defined. 
 - N: The number of particles for tracking each cell.
 - alpha: The balance parameter that controlls importance of covariation and relative positions among cells (0 ... 1.0).
   - `eta:1.0`--> Information of covariation among cells is only utilized.

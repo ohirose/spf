@@ -145,7 +145,7 @@ The parameters of *track* can be set in **conf-track.txt**. The file format is a
     seed:1
     cutoff:40
     dploop:10
-    root:-1
+    root:0
     N:1000
     alpha:0.7
     beta:0.05
@@ -165,7 +165,7 @@ The parameters of *track* can be set in **conf-track.txt**. The file format is a
 - dploop: The number of iterations for DP-means algorithm.
   - DP-means algorithm is used for cell detection and counting. 
 - root: The cell ID which is initially tracked for each time point.
-  - `root:-1`--> The root cell ID is automatically defined. 
+  - `root:0`--> The root cell ID is automatically defined. 
 - N: The number of particles for tracking each cell.
 - alpha: The balance parameter that controlls importance of covariation and relative positions among cells (0 ... 1.0).
   - `eta:1.0`--> Information of covariation among cells is only utilized.

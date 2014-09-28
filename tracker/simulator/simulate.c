@@ -108,7 +108,6 @@ int main (int argc, char** argv){
 
   normal(buf,T*K*P);
   for(t=0;t<T;t++)for(i=0;i<K;i++)for(p=0;p<P;p++)
-    //noise[t][V[i]][p]=buf[p+k*P+t*P*K]*((V[i]==root)?sgmt[p]:sgms[p]); 
     noise[t][V[i]][p]=buf[p+V[i]*P+t*P*K]*((V[i]==root)?sgmt[p]:sgms[p]); 
 
   fp = fopen(data,"wb"); fwrite(imsize,sizeof(int),4,fp);

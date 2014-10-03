@@ -100,7 +100,7 @@ int kmeans(
       for(k=0;k<K;k++)if(d[n][k]<min){min=d[n][k];kmin=k;}
       z[n]=(min<lim)?kmin:-1;
     }
-    for(n=0;n<N;n++)l[n]=0;
+    for(k=0;k<K;k++)l[k]=0;
     for(n=0;n<N;n++)if(z[n]>=0)l[z[n]]++;
 
     /* Update means */

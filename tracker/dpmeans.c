@@ -63,7 +63,7 @@ int dpmeans(
     for(k=0;k<Kt;k++)for(p=0;p<P;p++)m[k][p]=0;
     for(n=0;n<N ;n++)for(p=0;p<P;p++)m[z[n]][p]+=X[n][p];
     for(k=0;k<Kt;k++)for(p=0;p<P;p++){
-      if(!l[k]) {Kt--;tmp=m[k];m[k]=m[Kt];m[Kt]=tmp;}
+      if(!l[k]) {Kt--;tmp=m[k];m[k]=m[Kt];m[Kt]=tmp;l[k]=l[Kt];}
       m[k][p]/=(double)l[k];
     }
   } 

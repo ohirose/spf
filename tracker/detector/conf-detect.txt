@@ -1,0 +1,6 @@
+cutoff:30
+dploop:10
+wmax:1,1,1
+objsize:6,6,2
+input:.data.bin
+output:result.bin

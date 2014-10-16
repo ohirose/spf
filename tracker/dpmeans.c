@@ -41,7 +41,7 @@ int dpmeans(
 
   int    n,p,k,i;
   int    kmin=-1,Kt=1;
-  double min=1.0E200;
+  double *tmp,min=1.0E200;
 
   assert(P==2||P==3);
 
@@ -63,7 +63,8 @@ int dpmeans(
     for(k=0;k<Kt;k++)for(p=0;p<P;p++)m[k][p]=0;
     for(n=0;n<N ;n++)for(p=0;p<P;p++)m[z[n]][p]+=X[n][p];
     for(k=0;k<Kt;k++)for(p=0;p<P;p++){
-      assert(l[k]>0);m[k][p]/=(double)l[k];
+      if(!l[k]) {Kt--;tmp=m[k];m[k]=m[Kt];m[Kt]=tmp;}
+      m[k][p]/=(double)l[k];
     }
   } 
   *K=Kt;

@@ -265,8 +265,8 @@ int findroot(int *root, const byte *y, const double **mx, const int K, const int
 }
 
 int gcenter (double *g, const byte *y, const int *imsize){
-  int  p,i,j,k,l,I,J,K,L; I=imsize[0];J=imsize[1];K=imsize[2];L=I*J*K;
-  long s=0; double w,P=3; byte v;
+  int  p,i,j,k,l,I,J,K,L,P=3; I=imsize[0];J=imsize[1];K=imsize[2];L=I*J*K;
+  long s=0; double w; byte v;
 
   for(l=0;l<L;l++)s+=y[l]; assert(s>0);
   for(p=0;p<P;p++)g[p]=0;

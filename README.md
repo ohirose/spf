@@ -208,10 +208,12 @@ codes in the near future.
 
 INSTALL (Mac only):
 
-1. Install the software **Xquartz**, an implementation of X window system 
+1. Install **Xquartz**, an implementation of X window system 
    which runs on OS X. 
 
-2. Get the binary file **view** in **bin/Mac** directory of this repository 
+2. Install **freeglut**, a library for OpenGL.
+
+3. Get the binary file **view** in **bin/Mac** directory of this repository 
    and move it to the current directory.
 
 USAGE:

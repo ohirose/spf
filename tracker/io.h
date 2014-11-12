@@ -19,5 +19,5 @@
 // THE SOFTWARE.
 
 
-int write (char *file, const double **Xyall,  const int *Kall, 
+int write (char *file, const double ***Xyall, const int *Kall, 
                        const int    * imsize, const int *trsize, const int cut); 

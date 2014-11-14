@@ -208,7 +208,7 @@ codes in the near future.
 
 INSTALL (Mac only):
 
-1. Install **Xquartz**, an implementation of X window system 
+1. Install **XQuartz**, an implementation of X window system 
    which runs on OS X. 
 
 2. Install **freeglut**, a library for OpenGL.
@@ -221,7 +221,7 @@ USAGE:
 1. Put a 4D image file converted by *convert* and a trajectory file output 
    by *tracker* in the current directory.
 
-2. Type the following command:
+2. Run XQuartz and type the following command in your terminal window:
 
   `./view input-file-name trajectory-file-name`
 

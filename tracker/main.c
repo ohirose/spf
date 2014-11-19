@@ -212,7 +212,7 @@ int main (int argc, char** argv){
     }
   } 
 
-  write(out, (const double**)xyf,Ks,imsize,objsize,cut);
+  write(out, (const double***)xyf,Ks,imsize,objsize,cut);
 
   return 0;
 }

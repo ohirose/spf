@@ -97,7 +97,7 @@ int main (int argc, char** argv){
   fscanf(fpp,"input:%s\n",           in);
   fscanf(fpp,"output:%s\n",          out);
   fclose(fpp);fpp=NULL; init_genrand(seed);
-  rad=objsize[0]/2; zscale=objsize[0]/objsize[2];
+  rad=objsize[0]/2; zscale=objsize[0]/objsize[2];nf=(int)N*(1-beta);
 
   fp =fopen(in,"rb");if(!fp){printf("File: \'%s\' Not Found.\n",in);exit(1);}
   fread(imsize,sizeof(int),4,fp); L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
@@ -182,11 +182,11 @@ int main (int argc, char** argv){
         for(n=0;n<N;n++)for(p=0;p<P;p++) X[k][n][p]=xyf[t-1][k][p]+(g[t][p]-g[t-1][p])+noise[k][n][p]; 
       }
     
-      nf=N; 
       /* Filtering */
       if(objinimage(xp,imsize,objsize,margin)){
         filtering  (W[k],N,nf,y,(const double**)X[k],wlik,imsize);
         resampling (Nf[k],W[k],nf); 
+        for(n=nf;n<N;n++)Nf[k][n]=1;
       }
       else for(n=0;n<N;n++)Nf[k][n]=1;             
 
@@ -336,4 +336,3 @@ double gety(const byte *y, const double *x, const int *imsize){
   for(p=0;p<P;p++)if(x[p]<0||x[p]>=imsize[p]){out=1;break;} else l[p]=floor(x[p]);
   return out? 0:(double) y[l[0]+l[1]*imsize[0]+l[2]*imsize[0]*imsize[1]];
 }
-

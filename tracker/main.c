@@ -43,7 +43,7 @@ int    expectation_i(double *e, const int   *Nf, const double **X, const int N);
 int    expectation  (double *e, const double *W, const double **X, const int N);
 
 int    subimage     (short *sy, const byte *y, const double *x, const int *wdw, const int *imsize);
-int    filtering    (double *W, short *yt1, short *yt, short **Y, const byte *y, const double **X, const short *yt0,
+int    filtering    (double *W, short *yt1, short **Y, const byte *y, const double **X, const short *yt0,
                      const int N, const int nf, const int *wdw, const double gamma, const double sgml, const int *imsize);
 
 /* NOTE --------------------------------------------------------------*/               
@@ -80,7 +80,7 @@ int main (int argc, char** argv){
   int    **G,*U,*V,*Ks; 
   int    *nmem,*lbl,**Nf;
   int    **H,*tmp;
-  short  **Y,**Yt1,**Yt0,*yt;
+  short  **Y,**Yt1,**Yt0;
 
   fpp=fopen("conf-track.txt", "r");if(!fpp){printf("File: \'conf-track.txt\' Not Found.\n"); exit(1);}
   fscanf(fpp,"cutoff:%d\n",          &cut);                                  // Detection
@@ -150,7 +150,6 @@ int main (int argc, char** argv){
   Ks    = calloc   (T,    sizeof(int));   
   buf   = calloc   (K*N*P,sizeof(double));  
   tmp   = calloc   (N,    sizeof(double));
-  yt    = calloc   (Ls,   sizeof(short));
 
   /* Construction of MRF tree */ 
   for(k1=0;k1<K;k1++)for(k2=0;k2<K;k2++) D[k1][k2]=wdist(x0[k1],x0[k2],P,zscale);
@@ -189,7 +188,6 @@ int main (int argc, char** argv){
           if(n1)for(j=0;j<n1;j++){assert(ofs>=0&&j+ofs<N); H[k][j+ofs]=n;
             for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+noise[k][n][p]+((genrand_real1()<alpha)?eta[p]:eta0[p]);
             if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rho*rad) /* Avoiding collisions */
-              //for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]-0.5*noise[k][n][p];
               for(p=0;p<P;p++) X[k][j+ofs][p]-=0.5*noise[k][n][p];
           }
           ofs+=n1;
@@ -202,7 +200,7 @@ int main (int argc, char** argv){
     
       /* Filtering */
       if(objinimage(xp,imsize,objsize,margin)){
-        filtering(W[k],Yt1[k],yt,Y,y,(const double**)X[k],Yt0[k],N,nf,wlik,gamma,sgml,imsize);
+        filtering(W[k],Yt1[k],Y,y,(const double**)X[k],Yt0[k],N,nf,wlik,gamma,sgml,imsize);
         resampling (Nf[k],W[k],nf); 
         for(n=nf;n<N;n++)Nf[k][n]=1;
       }
@@ -357,10 +355,9 @@ inline double likelihood(const short *y, const short *y0, const int *wdw, const 
   return val;
 }
 
-int filtering (double *W/*O*/, short *yt1/*IO*/, short *yt/*B*/, short **Y/*B*/,
-               const byte *y, const double **X,  const short *yt0,
+int filtering (double *W/*O*/, short *yt1/*IO*/, short **Y/*B*/, const byte *y, const double **X,  const short *yt0,
                const int N, const int nf, const int *wdw, const double gamma, const double sgml, const int *imsize){
-  int n,l,L=(2*wdw[0]+1)*(2*wdw[1]+1)*(2*wdw[2]+1); double val=0;
+  int n; double val=0;
 
   for(n=0;n<nf;n++) subimage(Y[n],y,X[n],wdw,imsize);
   for(n=0;n<nf;n++) W[n]=likelihood(Y[n],yt1,wdw,sgml);
@@ -372,8 +369,8 @@ int filtering (double *W/*O*/, short *yt1/*IO*/, short *yt/*B*/, short **Y/*B*/,
     for(n=nf;n<N;n++)W[n]=0;
   }
 
-  wmeanimage(yt,(const short**)Y,W,N,wdw);mergeimage(yt,yt0,wdw,gamma);
-  for(l=0;l<L;l++)yt1[n]=yt[n];
+  wmeanimage(yt1,(const short**)Y,W,N,wdw);
+  mergeimage(yt1,yt0,wdw,gamma);
 
   return 0;
 }

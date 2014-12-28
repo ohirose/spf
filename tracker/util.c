@@ -56,3 +56,9 @@ int    ** calloc2i (const int M, const int N){
   return a;
 }
 
+short ** calloc2s (const int M, const int N){
+  int m;
+  short **          a    = calloc (M, sizeof(short*));
+  for (m=0;m<M;m++) a[m] = calloc (N, sizeof(short ));
+  return a;
+}

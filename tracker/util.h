@@ -29,5 +29,6 @@ int  cmp_sortbox          (const void *a, const void *b);
 double  ** calloc2d (const int M, const int N);
 int     ** calloc2i (const int M, const int N);
 double *** calloc3d (const int L, const int M, const int N);
+short   ** calloc2s (const int M, const int N);
 
 typedef unsigned char byte;

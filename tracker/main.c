@@ -35,14 +35,16 @@ int    findroot     (int *root, const byte *y,
 int    gcenter      (double *g, const byte *y, const int *imsize);
 double gety         (const byte *y, const double *x, const int *imsize);
 int    normal       (double *v, int nv);
-int    filtering    (double *W, const int N, const int nf, 
-                     const byte *y, const double **X, const int* wlik,const int *imsize);
 int    resampling   (int *nums, const double *W, const int N);
 int    objinimage   (const double *x, const int *imsize, const int *objsize, const int *margin);
 int    smoothing    (double **W2, int *buf, 
                      const int **H, const int **Nf, const int *V, const int *U, const int K, const int N);
 int    expectation_i(double *e, const int   *Nf, const double **X, const int N);
 int    expectation  (double *e, const double *W, const double **X, const int N);
+
+int    subimage     (short *sy, const byte *y, const double *x, const int *wdw, const int *imsize);
+int    filtering    (double *W, short *yt1, short *yt, short **Y, const byte *y, const double **X, const short *yt0,
+                     const int N, const int nf, const int *wdw, const double gamma, const double sgml, const int *imsize);
 
 /* NOTE --------------------------------------------------------------*/               
 /* Use 'Mersenne Twister (mt19937ar.c)' as a rundom number generator. */
@@ -59,17 +61,17 @@ int main (int argc, char** argv){
   FILE   *fp,*fpp; int P=3;
 
   // Parameters
-  double sgmt[3],sgms[3];
+  double sgmt[3],sgms[3],sgml;
   int    wmax[3],wlik[3],objsize[3],margin[3];
-  double alpha,beta,zscale;
-  int    seed,cut,dploop,N,tune;
+  double alpha,beta,gamma,rho,zscale;
+  int    seed,cut,dploop,N;
   char   in[256],out[256];
 
   int    imsize[4];
-  int    i,j,t,k,n,n1,p,T,K,k1,k2,u,nf,L,ofs;
+  int    i,j,t,k,l,n,n1,p,T,K,k1,k2,u,nf,L,Ls,ofs;
   int    nvx,root,rad;
 
-  byte   *y;
+  byte   *y,*ytmp;
   double **vx,**dist;
   double *eta,*eta0,*mov,**g;
   double **x0,***X,**W,**W2,**D,***noise; 
@@ -78,32 +80,37 @@ int main (int argc, char** argv){
   int    **G,*U,*V,*Ks; 
   int    *nmem,*lbl,**Nf;
   int    **H,*tmp;
+  short  **Y,**Yt1,**Yt0,*yt;
 
   fpp=fopen("conf-track.txt", "r");if(!fpp){printf("File: \'conf-track.txt\' Not Found.\n"); exit(1);}
-  fscanf(fpp,"seed:%d\n",            &seed);
-  fscanf(fpp,"cutoff:%d\n",          &cut);
-  fscanf(fpp,"dploop:%d\n",          &dploop);
-  fscanf(fpp,"root:%d\n",            &root); root--;
-  fscanf(fpp,"N:%d\n",               &N);
-  fscanf(fpp,"alpha:%lf\n",          &alpha);
-  fscanf(fpp,"beta:%lf\n",           &beta);
-  fscanf(fpp,"sgmt:%lf,%lf,%lf\n",   &sgmt[0],&sgmt[1],&sgmt[2]);
-  fscanf(fpp,"sgms:%lf,%lf,%lf\n",   &sgms[0],&sgms[1],&sgms[2]);
-  fscanf(fpp,"wmax:%d,%d,%d\n",      &wmax[0],&wmax[1],&wmax[2]);
-  fscanf(fpp,"wlik:%d,%d,%d\n",      &wlik[0],&wlik[1],&wlik[2]);
-  fscanf(fpp,"objsize:%d,%d,%d\n",   &objsize[0],&objsize[1],&objsize[2]);
-  fscanf(fpp,"margin:%d,%d,%d\n",    &margin [0],&margin [1],&margin [2]);
-  fscanf(fpp,"tune:%d\n",            &tune);
-  fscanf(fpp,"input:%s\n",           in);
-  fscanf(fpp,"output:%s\n",          out);
+  fscanf(fpp,"cutoff:%d\n",          &cut);                                  // Detection
+  fscanf(fpp,"dploop:%d\n",          &dploop);                               //    |
+  fscanf(fpp,"wmax:%d,%d,%d\n",      &wmax[0],&wmax[1],&wmax[2]);            // Detection
+  fscanf(fpp,"seed:%d\n",            &seed);                                 // Tracking
+  fscanf(fpp,"root:%d\n",            &root); root--;                         //    |
+  fscanf(fpp,"N:%d\n",               &N);                                    //    |
+  fscanf(fpp,"alpha:%lf\n",          &alpha);                                //    |
+  fscanf(fpp,"beta:%lf\n",           &beta);                                 //    |
+  fscanf(fpp,"gamma:%lf\n",          &gamma);                                //    |
+  fscanf(fpp,"rho:%lf\n",            &rho);                                  //    |
+  fscanf(fpp,"sgmt:%lf,%lf,%lf\n",   &sgmt[0],&sgmt[1],&sgmt[2]);            //    |
+  fscanf(fpp,"sgms:%lf,%lf,%lf\n",   &sgms[0],&sgms[1],&sgms[2]);            //    |
+  fscanf(fpp,"sgml:%lf\n",           &sgml);                                 //    |
+  fscanf(fpp,"wlik:%d,%d,%d\n",      &wlik[0],&wlik[1],&wlik[2]);            //    |
+  fscanf(fpp,"objsize:%d,%d,%d\n",   &objsize[0],&objsize[1],&objsize[2]);   //    |
+  fscanf(fpp,"margin:%d,%d,%d\n",    &margin [0],&margin [1],&margin [2]);   // Tracking
+  fscanf(fpp,"input:%s\n",           in);                                    // File (input)
+  fscanf(fpp,"output:%s\n",          out);                                   // File (output)
   fclose(fpp);fpp=NULL; init_genrand(seed);
   rad=objsize[0]/2; zscale=objsize[0]/objsize[2];nf=(int)N*(1-beta);
+  Ls=(2*wlik[0]+1)*(2*wlik[1]+1)*(2*wlik[2]+1);
 
   fp =fopen(in,"rb");if(!fp){printf("File: \'%s\' Not Found.\n",in);exit(1);}
   fread(imsize,sizeof(int),4,fp); L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
   printf("T=%d\n",T);
 
   y     = malloc   (L*sizeof(byte));
+  ytmp  = malloc   (L*sizeof(byte));
   vx    = calloc2d (NVXLIMIT,P);
   g     = calloc2d (T,P);
   lbl   = calloc   (NVXLIMIT,sizeof(int));
@@ -112,8 +119,8 @@ int main (int argc, char** argv){
   dist  = calloc2d (NVXLIMIT,NVXLIMIT);
   
   /* Determination of Initial positions */
-  fread(y,L,sizeof(byte),fp);
-  gcenter(g[0],y,imsize);cutoff(y,imsize,cut);localmax(vx,&nvx,y,imsize,wmax); 
+  fread(y,L,sizeof(byte),fp);for(l=0;l<L;l++)ytmp[l]=y[l];
+  gcenter(g[0],ytmp,imsize); cutoff(ytmp,imsize,cut); localmax(vx,&nvx,ytmp,imsize,wmax);
   dpmeans (lbl,x0,dist,nmem,&K,(const double**)vx,nvx,P,objsize[1],zscale,dploop);
   printf("K=%d\n",K);
 
@@ -127,6 +134,10 @@ int main (int argc, char** argv){
   G     = calloc2i (K,K);                 // Graph (MST)
   xyf   = calloc3d (T,K,P+1);             // Filter means
   xys   = calloc3d (T,K,P+1);             // Smoother means
+  Yt1   = calloc2s (K,Ls);
+  Yt0   = calloc2s (K,Ls);
+  Y     = calloc2s (N,Ls);
+
 
   xp    = calloc   (P,    sizeof(double));  // Prediction mean (buffer)
   xf    = calloc   (P,    sizeof(double));  // Filter     mean (buffer)
@@ -139,6 +150,7 @@ int main (int argc, char** argv){
   Ks    = calloc   (T,    sizeof(int));   
   buf   = calloc   (K*N*P,sizeof(double));  
   tmp   = calloc   (N,    sizeof(double));
+  yt    = calloc   (Ls,   sizeof(short));
 
   /* Construction of MRF tree */ 
   for(k1=0;k1<K;k1++)for(k2=0;k2<K;k2++) D[k1][k2]=wdist(x0[k1],x0[k2],P,zscale);
@@ -148,6 +160,11 @@ int main (int argc, char** argv){
   for(i=0;i<K;i++)for(p=0;p<P;p++){k=V[i];xyf[0][k][p]=xys[0][k][p]=x0[k][p];}
   for(i=0;i<K;i++){k=V[i];xyf[0][k][3]=xys[0][k][3]=gety(y,(const double*)x0[k],imsize);}Ks[0]=K;
   printf("root=%d\n",root+1);
+
+  for(i=0;i<K;i++){k=V[i];
+    subimage(Yt0[k],y,x0[k],wlik,imsize);
+    subimage(Yt1[k],y,x0[k],wlik,imsize);
+  }
    
   /* Spatial particle filter */
   for(t=1;t<T;t++){
@@ -170,9 +187,10 @@ int main (int argc, char** argv){
         ofs=0;
         for(n=0;n<N;n++){n1=Nf[u][n];
           if(n1)for(j=0;j<n1;j++){assert(ofs>=0&&j+ofs<N); H[k][j+ofs]=n;
-            for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]+noise[k][n][p];
-            if(wdist(X[k][j+ofs],X[u][n],P,zscale)<0.8*rad) /* Avoiding collisions */
-              for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]-0.5*noise[k][n][p];
+            for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+noise[k][n][p]+((genrand_real1()<alpha)?eta[p]:eta0[p]);
+            if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rho*rad) /* Avoiding collisions */
+              //for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+mov[p]-0.5*noise[k][n][p];
+              for(p=0;p<P;p++) X[k][j+ofs][p]-=0.5*noise[k][n][p];
           }
           ofs+=n1;
         }
@@ -184,7 +202,7 @@ int main (int argc, char** argv){
     
       /* Filtering */
       if(objinimage(xp,imsize,objsize,margin)){
-        filtering  (W[k],N,nf,y,(const double**)X[k],wlik,imsize);
+        filtering(W[k],Yt1[k],yt,Y,y,(const double**)X[k],Yt0[k],N,nf,wlik,gamma,sgml,imsize);
         resampling (Nf[k],W[k],nf); 
         for(n=nf;n<N;n++)Nf[k][n]=1;
       }
@@ -203,13 +221,6 @@ int main (int argc, char** argv){
       xys[t][k][3]=gety(y,(const double*)xs,imsize);
     }
 
-    /* Fine-tuning by k-means */ 
-    if(tune){
-      for(i=0;i<K;i++)for(p=0;p<P;p++)x0[i][p]=(double)xyf[t][i][p];
-      cutoff(y,imsize,cut);localmax(vx,&nvx,y,imsize,wmax); 
-      kmeans(lbl,x0,dist,nmem,(const double**)vx,nvx,K,P,zscale,dploop,tune);
-      for(i=0;i<K;i++){for(p=0;p<P;p++)xyf[t][i][p]=x0[i][p];xyf[t][i][3]=gety(y,(const double*)x0[i],imsize);}
-    }
   } 
 
   write(out, (const double***)xyf,Ks,imsize,objsize,cut);
@@ -234,7 +245,7 @@ int expectation_i(double *e, const int *Nf, const double **X, const int N){
 }
 
 inline int allzero(const double *W, const int N){
-  int n,flag=1; for(n=0;n<N;n++)if(W[n]>=1.0e-10){flag=0;break;} return flag;
+  int n,flag=1; for(n=0;n<N;n++)if(W[n]>=1.0e-250){flag=0;break;} return flag;
 } 
 
 int smoothing(double **W2, int *buf, 
@@ -283,34 +294,6 @@ int objinimage(const double *x, const int *imsize, const int *objsize, const int
          && x[2]-objsize[2]-margin[2]>=0 &&  x[2]+objsize[2]+margin[2]<imsize[2];
 }
 
-int filtering(double *W, const int N, const int nf, 
-              const byte *y, const double **X, const int* wlik,const int *imsize){
-  int n,i,j,k,a,b,c,A,B,C,I,J,K; double s,val=0,max=0;
-
-  A=wlik  [0]; B=wlik  [1]; C=wlik  [2];
-  I=imsize[0]; J=imsize[1]; K=imsize[2]; 
-
-  for(n=0;n<nf;n++){s=0;i=floor(X[n][0]);j=floor(X[n][1]);k=floor(X[n][2]);
-    for(a=-A;a<=A;a++)for(b=-B;b<=B;b++)for(c=-C;c<=C;c++)
-      if(i+a>=0&&i+a<I&&j+b>=0&&j+b<J&&k+c>=0&&k+c<K)s+=y[i+a+(j+b)*I+(k+c)*I*J];
-    W[n]=s;
-  }
-
-  for(n=0;n<nf;n++)if(W[n]>max) max=W[n];
-  if(max>0){
-    for(n=0;n<nf;n++)W[n]-=max;
-    for(n=0;n<nf;n++)W[n]=exp(-W[n]*W[n]);
-    for(n=0;n<nf;n++)val+=W[n];
-    for(n=0;n<nf;n++)W[n]/=val;
-    for(n=nf;n<N;n++)W[n]=0;
-  }
-  else {
-    for(n=0;n<nf;n++)W[n]=1/(double)nf;
-    for(n=nf;n<N;n++)W[n]=0;
-  }
-
-  return 0;
-}
 
 int resampling(int *nums, const double *probs, const int N){
   int i; double u =genrand_real1()/(double)N; 
@@ -336,3 +319,63 @@ double gety(const byte *y, const double *x, const int *imsize){
   for(p=0;p<P;p++)if(x[p]<0||x[p]>=imsize[p]){out=1;break;} else l[p]=floor(x[p]);
   return out? 0:(double) y[l[0]+l[1]*imsize[0]+l[2]*imsize[0]*imsize[1]];
 }
+
+int subimage(short *sy, const byte *y, const double *x, const int *wdw, const int *imsize){
+  int i,j,k,a,b,c,A,B,C,I,J,K,l=-1;
+
+  A=wdw   [0]; B=wdw   [1]; C=wdw   [2];
+  I=imsize[0]; J=imsize[1]; K=imsize[2];
+
+  i=floor(x[0]);j=floor(x[1]);k=floor(x[2]);
+  for(a=-A;a<=A;a++)for(b=-B;b<=B;b++)for(c=-C;c<=C;c++){l++;
+    sy[l]=(i+a>=0&&i+a<I&&j+b>=0&&j+b<J&&k+c>=0&&k+c<K)? y[i+a+(j+b)*I+(k+c)*I*J]:-1;
+  }
+
+  return 0;
+}
+
+inline int wmeanimage(short *wy, const short **Y, const double *W, const int N, const int *wdw){
+  int ct,n,l,L=(2*wdw[0]+1)*(2*wdw[1]+1)*(2*wdw[2]+1); double val,sum;
+  for(l=0;l<L;l++){ct=val=sum=0;
+    for(n=0;n<N;n++)if(Y[n][l]){ct++;sum+=W[n];val+=W[n]*Y[n][l];}
+    wy[l]=ct?(short)(val/sum):-1;
+  }
+  return 0;
+}
+
+inline int mergeimage(short *y, const short *y0, const int *wdw, const double gamma){
+  int l,L=(2*wdw[0]+1)*(2*wdw[1]+1)*(2*wdw[2]+1);
+  for(l=0;l<L;l++) y[l]=(y[l]>=0&&y0[l]>=0)?gamma*y[l]+(1-gamma)*y0[l]:-1;
+  return 0;
+}
+
+inline double likelihood(const short *y, const short *y0, const int *wdw, const double sgml){
+  int l,ct=0,L=(2*wdw[0]+1)*(2*wdw[1]+1)*(2*wdw[2]+1), lim=1; double tmp,val=0;
+  for(l=0;l<L;l++){if((y[l]<0||y0[l]<0)||(y[l]==0&&y0[l]==0))continue; ct++;
+    tmp=y[l]-(double)y0[l]; val+=tmp*tmp;
+  } val = ct>lim?exp(-val/(ct*sgml*sgml)):0.0;
+  return val;
+}
+
+int filtering (double *W/*O*/, short *yt1/*IO*/, short *yt/*B*/, short **Y/*B*/,
+               const byte *y, const double **X,  const short *yt0,
+               const int N, const int nf, const int *wdw, const double gamma, const double sgml, const int *imsize){
+  int n,l,L=(2*wdw[0]+1)*(2*wdw[1]+1)*(2*wdw[2]+1); double val=0;
+
+  for(n=0;n<nf;n++) subimage(Y[n],y,X[n],wdw,imsize);
+  for(n=0;n<nf;n++) W[n]=likelihood(Y[n],yt1,wdw,sgml);
+  for(n=0;n<nf;n++) val+=W[n];
+
+  if(!allzero(W,N))for(n=0;n<N;n++)W[n]/=val;
+  else{
+    for(n=0;n<nf;n++)W[n]=1.0/nf;
+    for(n=nf;n<N;n++)W[n]=0;
+  }
+
+  wmeanimage(yt,(const short**)Y,W,N,wdw);mergeimage(yt,yt0,wdw,gamma);
+  for(l=0;l<L;l++)yt1[n]=yt[n];
+
+  return 0;
+}
+
+

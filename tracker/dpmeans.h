@@ -36,17 +36,3 @@ int dpmeans(
       const int        nlp   /* INPUT : #loops     | size 1           */
   );
 
-int kmeans(
-      int           *  z,    /* OUTPUT: cluster id | size N           */
-      double        ** m,    /* OUTPUT: means      | size K x P       */
-      double        ** d,    /* OUTPUT: distance   | size N x K       */
-      int           *  l,    /* OUTPUT: #members   | size K           */
-      const double  ** X,    /* INPUT : data       | size N   x P     */
-      const int        N,    /* INPUT : #samples   | size 1           */
-      const int        K,    /* INPUT : #clusters  | size 1           */
-      const int        P,    /* INPUT : #variables | size 1           */
-      const double     dz,   /* INPUT : zscale     | size 1           */
-      const int        nlp,  /* INPUT : #loops     | size 1           */
-      const double     lim   /* INPUT : dist limit | size 1           */
-  );
-

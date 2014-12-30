@@ -51,7 +51,7 @@ int main (int argc, char** argv){
   double sgmt[3],sgms[3],length[3];
   double alpha,beta,zscale;
   int    seed;
-  char   init[256],data[256],traj[256];
+  char   *init=argv[1],*data=argv[2],*traj=argv[3];
 
   int    imsize[4],objsize[3];
   int    i,t,k,p,T,K,k1,k2,u,L;
@@ -64,6 +64,8 @@ int main (int argc, char** argv){
   double ***X,*buf;
   int    **G,*U,*V,*Ks; 
 
+  if(argc!=4){printf("USAGE: ./simulate <init (input)> <data> <trajectory>\n");exit(1);}
+
   fp=fopen("conf-sim.txt", "r");if(!fp){printf("File: \'conf-sim.txt\' Not Found.\n"); exit(1);}
   fscanf(fp,"imsize:%d,%d,%d,%d\n", imsize,imsize+1,imsize+2,imsize+3);
   fscanf(fp,"K:%d\n",               &K);
@@ -75,9 +77,6 @@ int main (int argc, char** argv){
   fscanf(fp,"sgms:%lf,%lf,%lf\n",   sgms,sgms+1,sgms+2);
   fscanf(fp,"length:%lf,%lf,%lf\n", length,length+1,length+2);
   fscanf(fp,"zscale:%lf\n",         &zscale);
-  fscanf(fp,"init:%s\n",            init);
-  fscanf(fp,"data:%s\n",            data);
-  fscanf(fp,"traj:%s\n",            traj);
   fclose(fp);fp=NULL; init_genrand(seed);
 
   objsize[0]=(int)length[0]; objsize[1]=(int)length[1]; objsize[2]=length[2]/zscale;

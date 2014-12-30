@@ -31,7 +31,7 @@
 #define NVXLIMIT 2048
 
 int mappsf (byte *y, const int *imsize, const double **X, const int V, const double length[3], 
-            const double zscale, const double sgm, const double beta);
+            const double zscale, const double sgmi, const double beta);
 int normal (double *v, int nv);
 
 /* NOTE --------------------------------------------------------------*/               
@@ -50,7 +50,7 @@ int main (int argc, char** argv){
 
   // Parameters
   double sgmt[3],sgms[3],length[3];
-  double alpha,beta,zscale;
+  double alpha,beta,zscale,sgmi;
   int    seed;
   char   *init=argv[1],*data=argv[2],*traj=argv[3];
 
@@ -76,6 +76,7 @@ int main (int argc, char** argv){
   fscanf(fp,"beta:%lf\n",           &beta);
   fscanf(fp,"sgmt:%lf,%lf,%lf\n",   sgmt,sgmt+1,sgmt+2);
   fscanf(fp,"sgms:%lf,%lf,%lf\n",   sgms,sgms+1,sgms+2);
+  fscanf(fp,"sgmi:%lf\n",           &sgmi);
   fscanf(fp,"length:%lf,%lf,%lf\n", length,length+1,length+2);
   fscanf(fp,"zscale:%lf\n",         &zscale);
   fclose(fp);fp=NULL; init_genrand(seed);
@@ -121,7 +122,7 @@ int main (int argc, char** argv){
       }
       else for(p=0;p<P;p++) X[t][k][p]=0.97*X[t-1][k][p]+0.03*X[0][k][p]+noise[t][k][p]; 
     }
-    mappsf(y,imsize,(const double**)X[t],K,length,zscale,2.0,beta);
+    mappsf(y,imsize,(const double**)X[t],K,length,zscale,sgmi,beta);
     fwrite(y,1,L,fp);
   } 
   fclose(fp); 
@@ -154,7 +155,7 @@ double maha_l(const double v1[3], const double v2[3], const double length[3], co
 
 
 int mappsf(byte *y, const int *imsize, const double **X, const int V, const double length[3], 
-          const double zscale, const double sgm, const double beta){
+          const double zscale, const double sgmi, const double beta){
   int a,b,c,l,v,A,B,C,I,J,K,L;
   double x[3],d2;
 
@@ -166,7 +167,7 @@ int mappsf(byte *y, const int *imsize, const double **X, const int V, const doub
       x[0]=floor(X[v][0])+a;x[1]=floor(X[v][1])+b;x[2]=floor(X[v][2])+c;l=x[0]+x[1]*I+x[2]*I*J; 
       if(x[0]>=0&&x[0]<I&&x[1]>=0&&x[1]<J&&x[2]>=0&&x[2]<K){
         d2=pow(maha_l(X[v],x,length,zscale),2);
-        y[l] += (d2>1.0)? (byte)0:(byte)(255*exp(-(3*d2)/(double)2));
+        y[l] += (d2>1.0)? (byte)0:(byte)(255*exp(-d2/(sgmi*sgmi*2.0)));
       }
     }
   }

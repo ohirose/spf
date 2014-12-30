@@ -6,7 +6,8 @@ alpha:0.7
 beta:0.0
 sgmt:0.6,0.4,0.001
 sgms:0.6,0.4,0.001
-objsize:7,7,3
+length:9.0,6.0,7.0
+zscale:3.0
 init:init.txt
 data:sim.bin
 traj:traj.bin

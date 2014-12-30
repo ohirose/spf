@@ -30,8 +30,8 @@
 
 #define NVXLIMIT 2048
 
-int    mappsf       (char *y, const int *imsize, const double **X, const int V, const int *objsize, const double sgm);
-int    normal       (double *v, int nv);
+int mappsf (byte *y, const int *imsize, const double **X, const int V, const double length[3], const double zscale, const double sgm);
+int normal (double *v, int nv);
 
 /* NOTE --------------------------------------------------------------*/               
 /* Use 'Mersenne Twister (mt19937ar.c)' as a rundom number generator. */
@@ -48,24 +48,23 @@ int main (int argc, char** argv){
   FILE   *fp; const int P=3;
 
   // Parameters
-  double sgmt[3],sgms[3];
-  int    objsize[3];
+  double sgmt[3],sgms[3],length[3];
   double alpha,beta,zscale;
   int    seed;
   char   init[256],data[256],traj[256];
 
-  int    imsize[4];
+  int    imsize[4],objsize[3];
   int    i,t,k,p,T,K,k1,k2,u,L;
-  int    root,rad;
+  int    root;
   int    cut=0;
 
-  char   *y;
+  byte   *y;
   double *eta,*eta0,*mov;
   double **D,***noise; 
   double ***X,*buf;
   int    **G,*U,*V,*Ks; 
 
-  fp=fopen("conf-sim.txt", "r");if(!fp){printf("File: \'param.txt\' Not Found.\n"); exit(1);}
+  fp=fopen("conf-sim.txt", "r");if(!fp){printf("File: \'conf-sim.txt\' Not Found.\n"); exit(1);}
   fscanf(fp,"imsize:%d,%d,%d,%d\n", imsize,imsize+1,imsize+2,imsize+3);
   fscanf(fp,"K:%d\n",               &K);
   fscanf(fp,"root:%d\n",            &root);
@@ -74,13 +73,14 @@ int main (int argc, char** argv){
   fscanf(fp,"beta:%lf\n",           &beta);
   fscanf(fp,"sgmt:%lf,%lf,%lf\n",   sgmt,sgmt+1,sgmt+2);
   fscanf(fp,"sgms:%lf,%lf,%lf\n",   sgms,sgms+1,sgms+2);
-  fscanf(fp,"objsize:%d,%d,%d\n",   objsize,objsize+1,objsize+2);
+  fscanf(fp,"length:%lf,%lf,%lf\n", length,length+1,length+2);
+  fscanf(fp,"zscale:%lf\n",         &zscale);
   fscanf(fp,"init:%s\n",            init);
   fscanf(fp,"data:%s\n",            data);
   fscanf(fp,"traj:%s\n",            traj);
   fclose(fp);fp=NULL; init_genrand(seed);
 
-  rad=objsize[0]/2; zscale=objsize[0]/objsize[2];
+  objsize[0]=(int)length[0]; objsize[1]=(int)length[1]; objsize[2]=length[2]/zscale;
   L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
   fclose(fp);fp=NULL;
 
@@ -90,7 +90,7 @@ int main (int argc, char** argv){
   G     = calloc2i (K,K);
 
   buf   = calloc   (T*K*P,sizeof(double));   
-  y     = calloc   (L,    sizeof(char));   
+  y     = calloc   (L,    sizeof(byte));
   eta0  = calloc   (P,    sizeof(double));
   eta   = calloc   (P,    sizeof(double));
   mov   = calloc   (P,    sizeof(double));
@@ -121,11 +121,11 @@ int main (int argc, char** argv){
       }
       else for(p=0;p<P;p++) X[t][k][p]=0.97*X[t-1][k][p]+0.03*X[0][k][p]+noise[t][k][p]; 
     }
-    mappsf(y,imsize,(const double**)X[t],K,objsize,2.0);
+    mappsf(y,imsize,(const double**)X[t],K,length,zscale,2.0);
     fwrite(y,1,L,fp);
   } 
   fclose(fp); 
-  write(traj,(const double**)X,Ks,imsize,objsize,cut);  
+  write(traj,(const double***)X,Ks,imsize,objsize,cut);
 
   return 0;
 }
@@ -141,19 +141,32 @@ int normal(double *v, int nv){
   return 0;
 }
 
-int mappsf(char *y, const int *imsize, const double **X, const int V, const int *objsize, const double sgm){
-  int a,b,c,l,v,A,B,C,I,J,K,L,P=3;
-  double x[3]; 
-  double zscale = objsize[0]/(double)objsize[2];
+double maha_l(const double v1[3], const double v2[3], const double length[3], const int zscale){
+  int p,P=3; double d=0,a[3];
+  a[0]= length[0]/(double)2;
+  a[1]= length[1]/(double)2;
+  a[2]= length[2]/(double)(2*zscale);
 
-  I=imsize[0];J=imsize[1];K=imsize[2];L=I*J*K; A=objsize[0]/2;B=objsize[1]/2;C=objsize[2]/2;
+  for(p=0;p<P;p++) d+= pow((v1[p]-v2[p])/(double)a[p],2);
+
+  return sqrt(d);
+}
+
+
+int mappsf(byte *y, const int *imsize, const double **X, const int V, const double length[3], const double zscale, const double sgm){
+  int a,b,c,l,v,A,B,C,I,J,K,L;
+  double x[3],d2;
+
+  I=imsize[0];J=imsize[1];K=imsize[2];L=I*J*K; A=length[0]/2.0;B=length[1]/2.0;C=length[2]/2.0;
   for(l=0;l<L;l++)y[l]=0;
 
   for(v=0;v<V;v++){
     for(a=-A;a<=A;a++)for(b=-B;b<=B;b++)for(c=-C;c<=C;c++){
       x[0]=floor(X[v][0])+a;x[1]=floor(X[v][1])+b;x[2]=floor(X[v][2])+c;l=x[0]+x[1]*I+x[2]*I*J; 
-      if(x[0]>=0&&x[0]<I&&x[1]>=0&&x[1]<J&&x[2]>=0&&x[2]<K)
-        y[l]=255*exp(-pow(wdist(X[v],x,P,zscale),2)/(sgm*sgm));
+      if(x[0]>=0&&x[0]<I&&x[1]>=0&&x[1]<J&&x[2]>=0&&x[2]<K){
+        d2=pow(maha_l(X[v],x,length,zscale),2);
+        y[l] += (d2>1.0)? (byte)0:(byte)(255*exp(-(3*d2)/(double)2));
+      }
     }
   }
 

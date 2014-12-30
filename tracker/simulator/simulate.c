@@ -30,7 +30,8 @@
 
 #define NVXLIMIT 2048
 
-int mappsf (byte *y, const int *imsize, const double **X, const int V, const double length[3], const double zscale, const double sgm);
+int mappsf (byte *y, const int *imsize, const double **X, const int V, const double length[3], 
+            const double zscale, const double sgm, const double beta);
 int normal (double *v, int nv);
 
 /* NOTE --------------------------------------------------------------*/               
@@ -120,7 +121,7 @@ int main (int argc, char** argv){
       }
       else for(p=0;p<P;p++) X[t][k][p]=0.97*X[t-1][k][p]+0.03*X[0][k][p]+noise[t][k][p]; 
     }
-    mappsf(y,imsize,(const double**)X[t],K,length,zscale,2.0);
+    mappsf(y,imsize,(const double**)X[t],K,length,zscale,2.0,beta);
     fwrite(y,1,L,fp);
   } 
   fclose(fp); 
@@ -152,14 +153,15 @@ double maha_l(const double v1[3], const double v2[3], const double length[3], co
 }
 
 
-int mappsf(byte *y, const int *imsize, const double **X, const int V, const double length[3], const double zscale, const double sgm){
+int mappsf(byte *y, const int *imsize, const double **X, const int V, const double length[3], 
+          const double zscale, const double sgm, const double beta){
   int a,b,c,l,v,A,B,C,I,J,K,L;
   double x[3],d2;
 
   I=imsize[0];J=imsize[1];K=imsize[2];L=I*J*K; A=length[0]/2.0;B=length[1]/2.0;C=length[2]/2.0;
   for(l=0;l<L;l++)y[l]=0;
 
-  for(v=0;v<V;v++){
+  for(v=0;v<V;v++){if(genrand_real1()<beta)continue;
     for(a=-A;a<=A;a++)for(b=-B;b<=B;b++)for(c=-C;c<=C;c++){
       x[0]=floor(X[v][0])+a;x[1]=floor(X[v][1])+b;x[2]=floor(X[v][2])+c;l=x[0]+x[1]*I+x[2]*I*J; 
       if(x[0]>=0&&x[0]<I&&x[1]>=0&&x[1]<J&&x[2]>=0&&x[2]<K){

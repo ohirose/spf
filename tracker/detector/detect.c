@@ -58,9 +58,6 @@ int main (int argc, char** argv){
 
     Ks[t]=K;
     for(k=0;k<K;k++){
-//      if(t>846)printf("(A)k,k1,y %d,%d,%d\n",k,k1,y[l1+l2*L1+l3*L1*L2]);
-//      if(t>846)printf("(A)l: %d,%d,%d\n",l1,l2,l3);
-//      if(t>846)printf("x: %f\n",x[k][0]);
       l1=floor(x[k][0]); Xy[t][k][0]=l1;
       l2=floor(x[k][1]); Xy[t][k][1]=l2;
       l3=floor(x[k][2]); Xy[t][k][2]=l3; 
@@ -68,7 +65,7 @@ int main (int argc, char** argv){
     } 
   }
 
-  write("result.bin",(const double**)Xy,Ks,imsize,objsize,cut);
+  write("result.bin",(const double***)Xy,Ks,imsize,objsize,cut);
 
   return 0;
 }

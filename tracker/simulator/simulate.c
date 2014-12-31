@@ -54,7 +54,7 @@ int main (int argc, char** argv){
   int    seed;
   char   *init=argv[1],*data=argv[2],*traj=argv[3];
 
-  int    imsize[4],objsize[3];
+  int    imsize[4],trksize[3];
   int    i,t,k,p,T,K,k1,k2,u,L;
   int    root;
   int    cut=0;
@@ -81,7 +81,7 @@ int main (int argc, char** argv){
   fscanf(fp,"zscale:%lf\n",         &zscale);
   fclose(fp);fp=NULL; init_genrand(seed);
 
-  objsize[0]=(int)length[0]; objsize[1]=(int)length[1]; objsize[2]=length[2]/zscale;
+  trksize[0]=trksize[1]=(int)length[0]; trksize[2]=length[2]/zscale;
   L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
 
   X     = calloc3d (T,K,P+1);
@@ -125,7 +125,7 @@ int main (int argc, char** argv){
     fwrite(y,1,L,fp);
   } 
   fclose(fp); 
-  write(traj,(const double***)X,Ks,imsize,objsize,cut);
+  write(traj,(const double***)X,Ks,imsize,trksize,cut);
 
   return 0;
 }

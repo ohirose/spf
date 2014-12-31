@@ -83,7 +83,6 @@ int main (int argc, char** argv){
 
   objsize[0]=(int)length[0]; objsize[1]=(int)length[1]; objsize[2]=length[2]/zscale;
   L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
-  fclose(fp);fp=NULL;
 
   X     = calloc3d (T,K,P+1);
   noise = calloc3d (T,K,P);

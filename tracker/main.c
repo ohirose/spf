@@ -102,7 +102,7 @@ int main (int argc, char** argv){
   fscanf(fpp,"input:%s\n",           in);                                    // File (input)
   fscanf(fpp,"output:%s\n",          out);                                   // File (output)
   fclose(fpp);fpp=NULL; init_genrand(seed);
-  rad=objsize[0]/2; zscale=objsize[0]/objsize[2];nf=(int)N*(1-beta);
+  rad=objsize[0]/2.0; zscale=(double)objsize[0]/objsize[2];nf=(int)N*(1-beta);
   Ls=(2*wlik[0]+1)*(2*wlik[1]+1)*(2*wlik[2]+1);
 
   fp =fopen(in,"rb");if(!fp){printf("File: \'%s\' Not Found.\n",in);exit(1);}
@@ -186,7 +186,9 @@ int main (int argc, char** argv){
         ofs=0;
         for(n=0;n<N;n++){n1=Nf[u][n];
           if(n1)for(j=0;j<n1;j++){assert(ofs>=0&&j+ofs<N); H[k][j+ofs]=n;
-            for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+noise[k][n][p]+((genrand_real1()<alpha)?eta[p]:eta0[p]);
+            for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+noise[k][n][p];
+              if(genrand_real1()>alpha) for(p=0;p<P;p++) X[k][j+ofs][p]+=eta0[p];
+              else                      for(p=0;p<P;p++) X[k][j+ofs][p]+=eta [p];
             if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rho*rad) /* Avoiding collisions */
               for(p=0;p<P;p++) X[k][j+ofs][p]-=0.5*noise[k][n][p];
           }
@@ -292,7 +294,6 @@ int objinimage(const double *x, const int *imsize, const int *objsize, const int
          && x[2]-objsize[2]-margin[2]>=0 &&  x[2]+objsize[2]+margin[2]<imsize[2];
 }
 
-
 int resampling(int *nums, const double *probs, const int N){
   int i; double u =genrand_real1()/(double)N; 
   for(i=0;i<N;i++){
@@ -314,7 +315,7 @@ int normal(double *v, int nv){
 
 double gety(const byte *y, const double *x, const int *imsize){
   int p,P=3,l[3],out=0;  
-  for(p=0;p<P;p++)if(x[p]<0||x[p]>=imsize[p]){out=1;break;} else l[p]=floor(x[p]);
+  for(p=0;p<P;p++)if(x[p]<-0.5||x[p]>=imsize[p]-0.5){out=1;break;} else l[p]=(int)(x[p]+0.5);
   return out? 0:(double) y[l[0]+l[1]*imsize[0]+l[2]*imsize[0]*imsize[1]];
 }
 

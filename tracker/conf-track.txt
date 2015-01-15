@@ -3,6 +3,7 @@ dploop:10
 wmax:1,1,1
 seed:3
 root:0
+order:6
 N:1000
 alpha:0.85
 beta:0.00

@@ -55,6 +55,8 @@ int    filtering    (double *W, short *yt1, short **Y, const byte *y, const doub
 void          init_genrand   (unsigned long s);
 double        genrand_real1  (void);
 
+int           categorical    (const double *probs, const int N);
+
 
 int main (int argc, char** argv){
 
@@ -64,19 +66,20 @@ int main (int argc, char** argv){
   double sgmt[3],sgms[3],sgml;
   int    wmax[3],wlik[3],objsize[3],margin[3];
   double alpha,beta,gamma,rho,zscale;
-  int    seed,cut,dploop,N;
+  int    seed,cut,dploop,N,order;
   char   in[256],out[256];
 
   int    imsize[4];
   int    i,j,t,k,l,n,n1,p,T,K,k1,k2,u,nf,L,Ls,ofs;
   int    nvx,root,rad;
+  int    tau,q,Q;
 
   byte   *y,*ytmp;
   double **vx,**dist;
-  double *eta,*eta0,*mov,**g;
+  double **eta,*mov,**g,*probs;
   double **x0,***X,**W,**W2,**D,***noise; 
   double ***xyf,***xys,*xf,*xs,*xp;
-  double *buf;
+  double *buf,val;
   int    **G,*U,*V,*Ks; 
   int    *nmem,*lbl,**Nf;
   int    **H,*tmp;
@@ -88,6 +91,7 @@ int main (int argc, char** argv){
   fscanf(fpp,"wmax:%d,%d,%d\n",      &wmax[0],&wmax[1],&wmax[2]);            // Detection
   fscanf(fpp,"seed:%d\n",            &seed);                                 // Tracking
   fscanf(fpp,"root:%d\n",            &root); root--;                         //    |
+  fscanf(fpp,"order:%d\n",           &order);                                //    |
   fscanf(fpp,"N:%d\n",               &N);                                    //    |
   fscanf(fpp,"alpha:%lf\n",          &alpha);                                //    |
   fscanf(fpp,"beta:%lf\n",           &beta);                                 //    |
@@ -142,14 +146,15 @@ int main (int argc, char** argv){
   xp    = calloc   (P,    sizeof(double));  // Prediction mean (buffer)
   xf    = calloc   (P,    sizeof(double));  // Filter     mean (buffer)
   xs    = calloc   (P,    sizeof(double));  // Smoother   mean (buffer)
-  eta0  = calloc   (P,    sizeof(double));
-  eta   = calloc   (P,    sizeof(double));
+  eta   = calloc2d (order+1,P);
+  probs = calloc   (order+1,sizeof(double));
   mov   = calloc   (P,    sizeof(double));
   V     = calloc   (K,    sizeof(int));     
   U     = calloc   (K,    sizeof(int));    
   Ks    = calloc   (T,    sizeof(int));   
   buf   = calloc   (K*N*P,sizeof(double));  
   tmp   = calloc   (N,    sizeof(double));
+
 
   /* Construction of MRF tree */ 
   for(k1=0;k1<K;k1++)for(k2=0;k2<K;k2++) D[k1][k2]=wdist(x0[k1],x0[k2],P,zscale);
@@ -166,9 +171,14 @@ int main (int argc, char** argv){
   }
    
   /* Spatial particle filter */
-  for(t=1;t<T;t++){
+  for(t=1;t<T;t++){Q=(t-1<=order)?t-1:order;assert(Q>=0);
     if(t%10==9) fprintf(stderr,"t=%d\n",t+1);
     fread(y,L,sizeof(byte),fp); gcenter(g[t],y,imsize); 
+
+    probs[0]=Q?1-alpha:1;for(q=1;q<=Q;q++)probs[q]=probs[q-1]*alpha;
+    val=0;
+    for(q=1;q<=Q;q++)val+=probs[q];
+    for(q=1;q<=Q;q++)probs[q]/=val;
 
     normal(buf,K*N*P);Ks[t]=K;
     for(i=0;i<K;i++)for(n=0;n<N;n++)for(p=0;p<P;p++)
@@ -177,18 +187,16 @@ int main (int argc, char** argv){
     for(i=0;i<K;i++){k=V[i];u=U[k];assert(k>=0&&k<K&&u>=-1&&u<K); 
       /* Prediction */
       if(i){
-        for(p=0;p<P;p++){
-          eta [p]=xyf[t-1][k][p]-xyf[t-1][u][p];
-          eta0[p]=xyf  [0][k][p]-xyf  [0][u][p];
-          mov [p]=alpha*eta[p]+(1-alpha)*eta0[p];
-          xp  [p]=xyf[t][u][p]+mov[p];
+        for(p=0;p< P;p++) xp[p]=xyf[t][u][p];
+        for(q=0;q<=Q;q++){tau=q?t-q:0;
+          for(p=0;p<P;p++){eta[q][p] = xyf[tau][k][p]-xyf[tau][u][p];}
+          for(p=0;p<P;p++){xp [p]   +=(xyf[tau][k][p]-xyf[tau][u][p])*probs[q];}
         }
         ofs=0;
         for(n=0;n<N;n++){n1=Nf[u][n];
           if(n1)for(j=0;j<n1;j++){assert(ofs>=0&&j+ofs<N); H[k][j+ofs]=n;
             for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+noise[k][n][p];
-              if(genrand_real1()>alpha) for(p=0;p<P;p++) X[k][j+ofs][p]+=eta0[p];
-              else                      for(p=0;p<P;p++) X[k][j+ofs][p]+=eta [p];
+            q=categorical(probs,Q+1);for(p=0;p<P;p++)X[k][j+ofs][p]+=eta[q][p];
             if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rho*rad) /* Avoiding collisions */
               for(p=0;p<P;p++) X[k][j+ofs][p]-=0.5*noise[k][n][p];
           }
@@ -197,7 +205,7 @@ int main (int argc, char** argv){
       } 
       else {
         for(p=0;p<P;p++)xp[p]=xyf[t-1][k][p]+g[t][p]-g[t-1][p];
-        for(n=0;n<N;n++)for(p=0;p<P;p++) X[k][n][p]=xyf[t-1][k][p]+(g[t][p]-g[t-1][p])+noise[k][n][p]; 
+        for(n=0;n<N;n++)for(p=0;p<P;p++) X[k][n][p]=xp[p]+noise[k][n][p]; 
       }
     
       /* Filtering */
@@ -294,6 +302,13 @@ int objinimage(const double *x, const int *imsize, const int *objsize, const int
          && x[2]-objsize[2]-margin[2]>=0 &&  x[2]+objsize[2]+margin[2]<imsize[2];
 }
 
+
+int categorical(const double *probs, const int N){
+  int i; double u =genrand_real1();
+  for(i=0;i<N;i++){u-=probs[i];if(u<=0)break;}
+  return i;
+}
+
 int resampling(int *nums, const double *probs, const int N){
   int i; double u =genrand_real1()/(double)N; 
   for(i=0;i<N;i++){
@@ -376,4 +391,4 @@ int filtering (double *W/*O*/, short *yt1/*IO*/, short **Y/*B*/, const byte *y, 
   return 0;
 }
 
-
+ 

@@ -111,7 +111,6 @@ int main (int argc, char** argv){
 
   fp =fopen(in,"rb");if(!fp){printf("File: \'%s\' Not Found.\n",in);exit(1);}
   fread(imsize,sizeof(int),4,fp); L=imsize[0]*imsize[1]*imsize[2];T=imsize[3];
-  printf("T=%d\n",T);
 
   y     = malloc   (L*sizeof(byte));
   ytmp  = malloc   (L*sizeof(byte));
@@ -126,7 +125,6 @@ int main (int argc, char** argv){
   fread(y,L,sizeof(byte),fp);for(l=0;l<L;l++)ytmp[l]=y[l];
   gcenter(g[0],ytmp,imsize); cutoff(ytmp,imsize,cut); localmax(vx,&nvx,ytmp,imsize,wmax);
   dpmeans (lbl,x0,dist,nmem,&K,(const double**)vx,nvx,P,objsize[1],zscale,dploop);
-  printf("K=%d\n",K);
 
   X     = calloc3d (K,N,P);               // Particles
   noise = calloc3d (K,N,P);               // 
@@ -163,16 +161,23 @@ int main (int argc, char** argv){
   if(root<0)findroot(&root,y,(const double**)x0,K,imsize,zscale); makeiter(V,U,(const int**)G,K,root);
   for(i=0;i<K;i++)for(p=0;p<P;p++){k=V[i];xyf[0][k][p]=xys[0][k][p]=x0[k][p];}
   for(i=0;i<K;i++){k=V[i];xyf[0][k][3]=xys[0][k][3]=gety(y,(const double*)x0[k],imsize);}Ks[0]=K;
-  printf("root=%d\n",root+1);
 
   for(i=0;i<K;i++){k=V[i];
     subimage(Yt0[k],y,x0[k],wlik,imsize);
     subimage(Yt1[k],y,x0[k],wlik,imsize);
   }
    
+  printf("\n");
+  printf("  o------------------o------o\n");
+  printf("  | #Time points     | %4d |\n",T);
+  printf("  | #Detected cells  | %4d |\n",K);
+  printf("  | Root cell ID     | %4d |\n",root+1);
+  printf("  o------------------o------o\n");
+  printf("\n");
+
   /* Spatial particle filter */
   for(t=1;t<T;t++){Q=(t-1<=order)?t-1:order;assert(Q>=0);
-    if(t%10==9) fprintf(stderr,"t=%d\n",t+1);
+    progress(t,T,50,50);
     fread(y,L,sizeof(byte),fp); gcenter(g[t],y,imsize); 
 
     probs[0]=Q?1-alpha:1;for(q=1;q<=Q;q++)probs[q]=probs[q-1]*alpha;

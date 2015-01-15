@@ -58,3 +58,15 @@ int write(char *file, const double ***Xyall, const int *Kall,
   return 0;
 }
 
+int progress(const int n, const int N, const int times, const int w) {
+  int i,c; double r;
+
+  if(n%(1+N/times)!=0){r=(double)n/N;c=r*w;
+    printf("%3d%% [", (int)(r*100));
+    for(i=0;i<c;i++) printf("=");
+    for(i=c;i<w;i++) printf(" ");
+    printf("]\n\033[F\033[J");
+  }
+
+  return 0;
+}

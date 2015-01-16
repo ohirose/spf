@@ -22,6 +22,7 @@
 #include<stdlib.h>
 #include<math.h>
 #include<assert.h>
+#include<time.h>
 
 #include"util.h"
 #include"dpmeans.h"
@@ -84,6 +85,7 @@ int main (int argc, char** argv){
   int    *nmem,*lbl,**Nf;
   int    **H,*tmp;
   short  **Y,**Yt1,**Yt0;
+  clock_t start=clock();
 
   fpp=fopen("conf-track.txt", "r");if(!fpp){printf("File: \'conf-track.txt\' Not Found.\n"); exit(1);}
   fscanf(fpp,"cutoff:%d\n",          &cut);                                  // Detection
@@ -177,7 +179,7 @@ int main (int argc, char** argv){
 
   /* Spatial particle filter */
   for(t=1;t<T;t++){Q=(t-1<=order)?t-1:order;assert(Q>=0);
-    progress(t,T,50,50);
+    progress(t,T,50,50,(double)(clock()-start)/CLOCKS_PER_SEC);
     fread(y,L,sizeof(byte),fp); gcenter(g[t],y,imsize); 
 
     probs[0]=Q?1-alpha:1;for(q=1;q<=Q;q++)probs[q]=probs[q-1]*alpha;

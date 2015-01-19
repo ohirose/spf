@@ -58,14 +58,14 @@ int write(char *file, const double ***Xyall, const int *Kall,
   return 0;
 }
 
-int progress(const int n, const int N, const int times, const int w, const double lapse) {
+int progress(const int n, const int N, const int times, const int w, const double realtime, const double cputime) {
   int i,c; double r;
 
   if(n%(1+N/times)!=0){r=(double)(n+1)/N;c=r*w;
     printf("  %3d%% [", (int)(r*100));
     for(i=0;i<c;i++) printf("=");
     for(i=c;i<w;i++) printf(" ");
-    printf("]\n  Time: %.2f (sec)",lapse);
+    printf("]\n  Time: %d (sec)   CPU Time: %.2f (sec)",(int)realtime,cputime);
     if(n<N-1)printf("\n\033[F\033[J\033[F\033[J");
     else     printf("\n\n");
   }

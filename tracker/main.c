@@ -23,6 +23,7 @@
 #include<math.h>
 #include<assert.h>
 #include<time.h>
+#include<omp.h>
 
 #include"util.h"
 #include"dpmeans.h"
@@ -77,7 +78,7 @@ int main (int argc, char** argv){
 
   byte   *y,*ytmp;
   double **vx,**dist;
-  double **eta,*mov,**g,*probs;
+  double **eta,**g,*probs;
   double **x0,***X,**W,**W2,**D,***noise; 
   double ***xyf,***xys,*xf,*xs,*xp;
   double *buf,val;
@@ -85,7 +86,8 @@ int main (int argc, char** argv){
   int    *nmem,*lbl,**Nf;
   int    **H,*tmp;
   short  **Y,**Yt1,**Yt0;
-  clock_t start=clock();
+  clock_t cputime=clock();
+  time_t  realtime=time(NULL);
 
   fpp=fopen("conf-track.txt", "r");if(!fpp){printf("File: \'conf-track.txt\' Not Found.\n"); exit(1);}
   fscanf(fpp,"cutoff:%d\n",          &cut);                                  // Detection
@@ -148,7 +150,6 @@ int main (int argc, char** argv){
   xs    = calloc   (P,    sizeof(double));  // Smoother   mean (buffer)
   eta   = calloc2d (order+1,P);
   probs = calloc   (order+1,sizeof(double));
-  mov   = calloc   (P,    sizeof(double));
   V     = calloc   (K,    sizeof(int));     
   U     = calloc   (K,    sizeof(int));    
   Ks    = calloc   (T,    sizeof(int));   
@@ -179,7 +180,7 @@ int main (int argc, char** argv){
 
   /* Spatial particle filter */
   for(t=1;t<T;t++){Q=(t-1<=order)?t-1:order;assert(Q>=0);
-    progress(t,T,50,50,(double)(clock()-start)/CLOCKS_PER_SEC);
+    progress(t,T,50,50,(double)time(NULL)-realtime,(double)(clock()-cputime)/CLOCKS_PER_SEC);
     fread(y,L,sizeof(byte),fp); gcenter(g[t],y,imsize); 
 
     probs[0]=Q?1-alpha:1;for(q=1;q<=Q;q++)probs[q]=probs[q-1]*alpha;
@@ -378,24 +379,26 @@ inline double likelihood(const short *y, const short *y0, const int *wdw, const 
   return val;
 }
 
+
 int filtering (double *W/*O*/, short *yt1/*IO*/, short **Y/*B*/, const byte *y, const double **X,  const short *yt0,
                const int N, const int nf, const int *wdw, const double gamma, const double sgml, const int *imsize){
   int n; double val=0;
 
+  #pragma omp parallel for
   for(n=0;n<nf;n++) subimage(Y[n],y,X[n],wdw,imsize);
+  #pragma omp parallel for
   for(n=0;n<nf;n++) W[n]=likelihood(Y[n],yt1,wdw,sgml);
-  for(n=0;n<nf;n++) val+=W[n];
 
+  for(n=0;n<nf;n++) val+=W[n];
   if(!allzero(W,N))for(n=0;n<N;n++)W[n]/=val;
   else{
     for(n=0;n<nf;n++)W[n]=1.0/nf;
     for(n=nf;n<N;n++)W[n]=0;
   }
 
-  wmeanimage(yt1,(const short**)Y,W,N,wdw);
+  //wmeanimage(yt1,(const short**)Y,W,N,wdw);
   mergeimage(yt1,yt0,wdw,gamma);
 
   return 0;
 }
-
  

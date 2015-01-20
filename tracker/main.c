@@ -179,14 +179,14 @@ int main (int argc, char** argv){
   printf("\n");
 
   /* Spatial particle filter */
-  for(t=1;t<T;t++){Q=(t-1<=order)?t-1:order;assert(Q>=0);
+  for(t=1;t<T;t++){Q=(t-1<=order)?t-1:order;assert(Q>=0);assert(Q<t);
     progress(t,T,50,50,(double)time(NULL)-realtime,(double)(clock()-cputime)/CLOCKS_PER_SEC);
     fread(y,L,sizeof(byte),fp); gcenter(g[t],y,imsize); 
 
     probs[0]=Q?1-alpha:1;for(q=1;q<=Q;q++)probs[q]=probs[q-1]*alpha;
     val=0;
     for(q=1;q<=Q;q++)val+=probs[q];
-    for(q=1;q<=Q;q++)probs[q]/=val;
+    for(q=1;q<=Q;q++)probs[q]/=val; for(q=1;q<=Q;q++)probs[q]*=alpha;
 
     normal(buf,K*N*P);Ks[t]=K;
     for(i=0;i<K;i++)for(n=0;n<N;n++)for(p=0;p<P;p++)
@@ -196,7 +196,7 @@ int main (int argc, char** argv){
       /* Prediction */
       if(i){
         for(p=0;p< P;p++) xp[p]=xyf[t][u][p];
-        for(q=0;q<=Q;q++){tau=q?t-q:0;
+        for(q=0;q<=Q;q++){tau=q?t-q:0;assert(tau>=0);assert(tau<t);
           for(p=0;p<P;p++){eta[q][p] = xyf[tau][k][p]-xyf[tau][u][p];}
           for(p=0;p<P;p++){xp [p]   +=(xyf[tau][k][p]-xyf[tau][u][p])*probs[q];}
         }
@@ -338,7 +338,7 @@ int normal(double *v, int nv){
 
 double gety(const byte *y, const double *x, const int *imsize){
   int p,P=3,l[3],out=0;  
-  for(p=0;p<P;p++)if(x[p]<-0.5||x[p]>=imsize[p]-0.5){out=1;break;} else l[p]=(int)(x[p]+0.5);
+  for(p=0;p<P;p++)if(x[p]<=0.0||x[p]>=imsize[p]){out=1;break;} else l[p]=floor(x[p]);
   return out? 0:(double) y[l[0]+l[1]*imsize[0]+l[2]*imsize[0]*imsize[1]];
 }
 

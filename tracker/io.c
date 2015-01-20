@@ -22,16 +22,14 @@
 #include<stdlib.h>
 #include<math.h>
 #include"util.h"
-#define LIMIT 5000000
+#define LIMIT 256
 
 int write(char *file, const double ***Xyall, const int *Kall, 
                       const int     *imsize, const int *trsize, const int cut){ 
    
-  int y,k,l,m,n,t,K,L,M,N,A,B,C,T,off=0;
-  int *buf; 
+  int k,t,K,L,M,N,A,B,C,T,off=0,p,P=3;
+  int buf[8]; float xy[4];
   FILE *fp  = fopen(file,"wb");
-
-  buf= malloc(LIMIT*sizeof(int));
 
   L=imsize[0];M=imsize[1];N=imsize[2];T=imsize[3];
   A=trsize[0];B=trsize[1];C=trsize[2];
@@ -39,20 +37,15 @@ int write(char *file, const double ***Xyall, const int *Kall,
   buf[0]=L;buf[1]=M;buf[2]=N;buf[3]=T;
   buf[4]=A;buf[5]=B;buf[6]=C;buf[7]=cut; fwrite(buf,sizeof(int),8,fp);  
 
-  for(t=0;t<T;t++){
-    K=Kall[t];buf[0]=t;buf[1]=K; fwrite(buf,sizeof(int),2,fp);
+  for(t=0;t<T;t++){K=Kall[t];buf[0]=t;buf[1]=K;
+    fwrite(buf,sizeof(int),2,fp);
     for(k=0;k<K;k++){
-      l=(int)floor(Xyall[t][k][0]);
-      m=(int)floor(Xyall[t][k][1]);
-      n=(int)floor(Xyall[t][k][2]);
-      y=(int)floor(Xyall[t][k][3]);
-   
-      buf[0]=l;buf[1]=m;buf[2]=n;buf[3]=y;fwrite(buf,sizeof(int),4,fp);
+      for(p=0;p<P+1;p++)xy[p]=(float)Xyall[t][k][p];
+      fwrite(xy, sizeof(float),4,fp);
     }
     off+=K;
   }
     
-  free(buf);
   fclose(fp);
 
   return 0;

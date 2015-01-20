@@ -3,12 +3,12 @@
 
 int main(int argc, char** argv){
 
-  int s,k,K,t,end,*buf,l,m,n,L,M,N,flag;
+  int k,K,t,end,buf[8],L,M,N,flag; float s,l,m,n,*xy;
   FILE *fp  = fopen(argv[1],"rb");
 
   flag= (argc>2)?1:0;
   fseek(fp,0,SEEK_END);end=ftell(fp);fseek(fp,0,SEEK_SET); 
-  buf = malloc((1+end)*sizeof(int)); 
+  xy = malloc((1+end)*sizeof(float));
 
   fread(buf,sizeof(int),8,fp); 
   if(!flag) printf("Resolution:   %3dx%3dx%2d\n",buf[0],buf[1],buf[2]);
@@ -23,10 +23,10 @@ int main(int argc, char** argv){
     fread(buf,sizeof(int),2,fp); t=buf[0];K=buf[1];
     printf("Frame: %.3d (#targets=%d)\n",t,K);
 
-    fread(buf,sizeof(int),4*K,fp); 
-    for(k=0;k<K;k++){l=buf[4*k];m=buf[4*k+1];n=buf[4*k+2];s=buf[4*k+3];
-      if(!flag) printf("%4d%4d%4d%4d\n",  l,  m,  n,s);
-      if( flag) printf("%4d%4d%4d%4d\n",M-m,l+1,N-n,s);
+    fread(xy,sizeof(float),4*K,fp);
+    for(k=0;k<K;k++){l=xy[4*k];m=xy[4*k+1];n=xy[4*k+2];s=xy[4*k+3];
+      if(!flag) printf("%.3f\t%.3f\t%.3f\t%.3f\n",  l,  m,  n,s);
+      if( flag) printf("%.3f\t%.3f\t%.3f\t%.3f\n",M-m,l+1,N-n,s);
     } printf("\n");
   }
 

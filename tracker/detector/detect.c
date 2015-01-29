@@ -65,7 +65,7 @@ int main (int argc, char** argv){
     } 
   }
 
-  write("result.bin",(const double***)Xy,Ks,imsize,objsize,cut);
+  write(out,(const double***)Xy,Ks,imsize,objsize,cut);
 
   return 0;
 }

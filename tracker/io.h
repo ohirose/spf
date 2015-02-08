@@ -19,6 +19,5 @@
 // THE SOFTWARE.
 
 
-int write (char *file, const double ***Xyall, const int *Kall, 
-                       const int    * imsize, const int *trsize, const int cut); 
-int progress(const int n, const int N, const int times, const int w, const double realtime, const double cputime);
+int writetraj(char *file, const double ***Xyall, const int *Kall, const int *imsize, const int *trsize, const int cut);
+int progress (const int n, const int N, const int times, const int w, const double realtime, const double cputime);

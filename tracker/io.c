@@ -24,8 +24,7 @@
 #include"util.h"
 #define LIMIT 256
 
-int write(char *file, const double ***Xyall, const int *Kall, 
-                      const int     *imsize, const int *trsize, const int cut){ 
+int writetraj(char *file, const double ***Xyall, const int *Kall, const int *imsize, const int *trsize, const int cut){
    
   int k,t,K,L,M,N,A,B,C,T,off=0,p,P=3;
   int buf[8]; float xy[4];

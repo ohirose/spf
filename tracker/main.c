@@ -23,6 +23,7 @@
 #include<math.h>
 #include<assert.h>
 #include<time.h>
+#include<unistd.h>
 #include<omp.h>
 
 #include"util.h"
@@ -66,13 +67,12 @@ int main (int argc, char** argv){
 
   // Parameters
   double sgmt[3],sgms[3],sgml;
-  int    wmax[3],wlik[3],objsize[3],margin[3];
+  int    wmax[3],wlik[3],objsize[3],margin[3],imsize[4];
   double alpha,beta,gamma,rho,zscale;
   int    seed,cut,dploop,N,order;
   char   in[256],out[256];
 
-  int    imsize[4];
-  int    i,j,t,k,l,n,n1,p,T,K,k1,k2,u,nf,L,Ls,ofs;
+  int    i,j,t,k,l,n,n1,p,T,K,k1,k2,u,nf,L,Ls,ofs,opt;
   int    nvx,root,rad;
   int    tau,q,Q;
 
@@ -124,11 +124,17 @@ int main (int argc, char** argv){
   nmem  = calloc   (NVXLIMIT,sizeof(int));
   x0    = calloc2d (NVXLIMIT,P);
   dist  = calloc2d (NVXLIMIT,NVXLIMIT);
-  
-  /* Determination of Initial positions */
-  fread(y,L,sizeof(byte),fp);for(l=0;l<L;l++)ytmp[l]=y[l];
-  gcenter(g[0],ytmp,imsize); cutoff(ytmp,imsize,cut); localmax(vx,&nvx,ytmp,imsize,wmax);
-  dpmeans (lbl,x0,dist,nmem,&K,(const double**)vx,nvx,P,objsize[1],zscale,dploop);
+
+  fread(y,L,sizeof(byte),fp);for(l=0;l<L;l++)ytmp[l]=y[l];gcenter(g[0],ytmp,imsize);
+  if((opt=getopt(argc,argv,"f:"))!=-1){/* Reading initial positions */
+    fpp=fopen(optarg,"r");if(!fpp){printf("File: \'%s\' Not Found.\n",optarg);exit(1);}
+    fscanf(fpp,"K=%d\n",&K);for(k=0;k<K;k++)fscanf(fpp,"%lf\t%lf\t%lf\n",x0[k],x0[k]+1,x0[k]+2);
+    fclose(fpp);fpp=NULL;
+  }
+  else{/* Determination of Initial positions */
+    cutoff(ytmp,imsize,cut);localmax(vx,&nvx,ytmp,imsize,wmax);
+    dpmeans (lbl,x0,dist,nmem,&K,(const double**)vx,nvx,P,objsize[1],zscale,dploop);
+  }
 
   X     = calloc3d (K,N,P);               // Particles
   noise = calloc3d (K,N,P);               // 
@@ -238,8 +244,7 @@ int main (int argc, char** argv){
     }
 
   } 
-
-  write(out, (const double***)xyf,Ks,imsize,objsize,cut);
+  writetraj(out,(const double***)xyf,Ks,imsize,objsize,cut);
 
   return 0;
 }

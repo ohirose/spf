@@ -33,8 +33,7 @@
 
 #define NVXLIMIT 2048
 
-int    findroot     (int *root, const byte *y, 
-                     const double **mx, const int K, const int *imsize, const double zscale);
+int    findroot     (int *root, const byte *y, const double **mx, const double **D, const int K, const int *imsize);
 int    gcenter      (double *g, const byte *y, const int *imsize);
 double gety         (const byte *y, const double *x, const int *imsize);
 int    normal       (double *v, int nv);
@@ -167,7 +166,7 @@ int main (int argc, char** argv){
   for(k1=0;k1<K;k1++)for(k2=0;k2<K;k2++) D[k1][k2]=wdist(x0[k1],x0[k2],P,zscale);
   mstree(G,(const double**)D,K); 
 
-  if(root<0)findroot(&root,y,(const double**)x0,K,imsize,zscale); makeiter(V,U,(const int**)G,K,root);
+  if(root<0)findroot(&root,y,(const double**)x0,(const double **)D,K,imsize); makeiter(V,U,(const int**)G,K,root);
   for(i=0;i<K;i++)for(p=0;p<P;p++){k=V[i];xyf[0][k][p]=xys[0][k][p]=x0[k][p];}
   for(i=0;i<K;i++){k=V[i];xyf[0][k][3]=xys[0][k][3]=gety(y,(const double*)x0[k],imsize);}Ks[0]=K;
 
@@ -289,10 +288,24 @@ int smoothing(double **W2, int *buf,
   return 0;
 }
  
-int findroot(int *root, const byte *y, const double **mx, const int K, const int *imsize, const double zscale){
-  int k,kmax=-1; double val,max =0;
-  for(k=0;k<K;k++){val=gety(y,mx[k],imsize);if(val>max){max=val;kmax=k;}}
+int findroot(int *root, const byte *y, const double **mx, const double **D, const int K, const int *imsize){
+  sortbox *sb; int n,nn=8;
+  int k,kmax=-1; double v,*val,max=0,th1=40,th2=0.20;
+
+  sb  =(sortbox*)calloc(K,sizeof(sortbox));
+  val =(double*) calloc(K,sizeof(double ));
+
+  /* Computing average distance from nearest neighbors */
+  for(k=0;k<K;k++){v=0;
+    prepare_sortbox(sb,D[k],K);qsort(sb,K,sizeof(sortbox),cmp_sortbox); assert(sb[0].val==0);
+    v=0;for(n=1;n<=nn;n++)v+=sb[n].val; val[k]=v/nn;
+  }
+  for(k=0;k<K;k++)val[k]*=1/(1+exp(th1-(double)gety(y,mx[k],imsize)));
+  for(k=0;k<K;k++){v=mx[k][0]/(double)imsize[0];val[k]*=(v>th2&&v<1-th2)?1:0;}
+  max=0;for(k=0;k<K;k++)if(val[k]>max){max=val[k];kmax=k;}
   *root=kmax; assert(kmax!=-1);
+
+  free(sb);free(val);
   return 0;
 }
 

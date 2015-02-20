@@ -130,7 +130,8 @@ COMPILATION:
 1. Get all the source codes registered in **tracker** directory of this
    repository and move them to your current directory.
 
-2. Type `make` in the terminal window.
+2. If you are Linux user, replace **gcc-mp-4.8** with **gcc** in **makefile**.
+   Type `make` in the terminal window.
 
 USAGE:
 
@@ -142,58 +143,36 @@ PARAMETERS:
 
 The parameters of *track* can be set in **conf-track.txt**. The file format is as follows:
 
-    seed:1
-    cutoff:40
-    dploop:10
-    root:0
-    N:1000
-    alpha:0.7
-    beta:0.05
-    sgmt:0.6,0.6,0.03
-    sgms:0.6,0.6,0.03
-    wmax:1,1,1
-    wlik:1,1,1
-    objsize:7,7,2
-    margin:3,3,0
-    tune:4
+    cutoff:18
+    wmax:2,2,1
+    lambda:6
+    zscale:3
+    alpha:0.85
+    sgmt:3.0,3.0,0.1
+    sgms:1.5,1.0,0.1
+    sgml:10
+    wlik:5,5,1
     input:data.bin
     output:result.bin
 
-- seed: The seed value for generating random numbers.
 - cutoff: The cutoff value of fluorescent intensities (0 ... 255).
   - Required only for cell detection and counting.
-- dploop: The number of iterations for DP-means algorithm.
-  - DP-means algorithm is used for cell detection and counting. 
-- root: The cell ID which is initially tracked for each time point.
-  - `root:0`--> The root cell ID is automatically defined. 
-- N: The number of particles for tracking each cell.
+- wmax: Specifies window size required for cell detection.
+  - Should be **narrower** than the size of cells.
+  - `wmax:l,m,n`--> Window size becomes (2l+1, 2m+1, 2n+1).
+- lambda: The maximum radius of cells to be tracked.
+- zscale: Ratio of the voxel step length along *z*-axis to that in *xy*-plane.
 - alpha: The balance parameter that controlls importance of covariation and relative positions among cells (0 ... 1.0).
-  - `eta:1.0`--> Information of covariation among cells is only utilized.
-  - `eta:0.0`--> Information of initial relative positions among cells is only utilized.
-  - `eta:0.5`--> The both information is utilized with equal weight.
-- beta: Probability that a cell disappears for each time.
+  - `alpha:1.0`--> Information of covariation among cells is only utilized.
+  - `alpha:0.0`--> Information of initial relative positions among cells is only utilized.
+  - `alpha:0.5`--> The both information is utilized with equal weight.
 - sgmt: Standard deviation of system noise for the root cell.
   - The first, second, and third values corresponds to standard deviations according to *x*, *y*, and *z* coordinates, respectively.
 - sgms: Standard deviation of system noise for non-root cells.
   - The first, second, and third values corresponds to standard deviations according to *x*, *y*, and *z* coordinates, respectively.
-- wmax: Specifies window size required for cell detection.
-  - Should be **narrower** than the size of cells.
-  - `wmax:l,m,n`--> Window size becomes (2l+1, 2m+1, 2n+1).
+- sgml: Standard deviation of the likelihood function.
 - wlik: Specifies window size required for the computation of likelihoods.
   - `wlik:l,m,n`--> Window size becomes (2l+1, 2m+1, 2n+1).
-- objsize: The size of cells.
-  - `objsize:l,m,n`--> The cell size becomes (l, m, n).
-  - The scale difference between *z* axis and *xy* plane is automatically controlled by this parameter under the assumption that
-cell shapes are sphere. 
-- margin: Defines area that avoids computation of likelihoods.
-  - The parameter for tracking cells that are about to go out of the image space.
-  - `margin:l,m,n`--> likelihoods are computed only if cells are in the region that is *l*,*m*, and *n* voxels narrower than the
-image space along the *x*,*y*, and *z* axes, respectively.
-- tune: The parameter for the fine-tuning of tracked cell positions. 
-  - Utilizes the result of the cell-detection by the *k*-means algorithm. 
-  - Tracked cell positions are utilized as the initial parameters of the *k*-means algorithm.
-  - `tune:4`--> If a tracked cell position is within 4 voxels from the position of the corresponding cell detected 
-by the *k*-means algorithm, the cell position is modified to the position. 
 - input: Input file name.
 - output: Output file name.
 

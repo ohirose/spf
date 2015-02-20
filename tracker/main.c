@@ -20,6 +20,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 #include<math.h>
 #include<assert.h>
 #include<time.h>
@@ -66,13 +67,13 @@ int main (int argc, char** argv){
 
   // Parameters
   double sgmt[3],sgms[3],sgml;
-  int    wmax[3],wlik[3],objsize[3],margin[3],imsize[4];
-  double alpha,beta,gamma,rho,zscale;
-  int    seed,cut,dploop,N,order;
-  char   in[256],out[256];
+  int    wmax[3],wlik[3],objsize[3],imsize[4],margin[3]={2,2,0};
+  double alpha,lambda,zscale,beta=0.0,gamma=0.1,rho=0.8;
+  int    cut,seed=1,dploop=10,N=1000,order=1,root=-1;
+  char   in[256],out[256],init[256]="\0";
 
-  int    i,j,t,k,l,n,n1,p,T,K,k1,k2,u,nf,L,Ls,ofs,opt;
-  int    nvx,root,rad;
+  int    i,j,t,k,l,n,n1,p,T,K,k1,k2,u,nf,L,Ls,ofs,nvx;
+  int    opt,flagv=0;
   int    tau,q,Q;
 
   byte   *y,*ytmp;
@@ -90,26 +91,60 @@ int main (int argc, char** argv){
 
   fpp=fopen("conf-track.txt", "r");if(!fpp){printf("File: \'conf-track.txt\' Not Found.\n"); exit(1);}
   fscanf(fpp,"cutoff:%d\n",          &cut);                                  // Detection
-  fscanf(fpp,"dploop:%d\n",          &dploop);                               //    |
   fscanf(fpp,"wmax:%d,%d,%d\n",      &wmax[0],&wmax[1],&wmax[2]);            // Detection
-  fscanf(fpp,"seed:%d\n",            &seed);                                 // Tracking
-  fscanf(fpp,"root:%d\n",            &root); root--;                         //    |
-  fscanf(fpp,"order:%d\n",           &order);                                //    |
-  fscanf(fpp,"N:%d\n",               &N);                                    //    |
-  fscanf(fpp,"alpha:%lf\n",          &alpha);                                //    |
-  fscanf(fpp,"beta:%lf\n",           &beta);                                 //    |
-  fscanf(fpp,"gamma:%lf\n",          &gamma);                                //    |
-  fscanf(fpp,"rho:%lf\n",            &rho);                                  //    |
+  fscanf(fpp,"lambda:%lf\n",         &lambda);                               // Detection & Tracking
+  fscanf(fpp,"zscale:%lf\n",         &zscale);                               // Detection & Tracking
+  fscanf(fpp,"alpha:%lf\n",          &alpha);                                // Tracking
   fscanf(fpp,"sgmt:%lf,%lf,%lf\n",   &sgmt[0],&sgmt[1],&sgmt[2]);            //    |
   fscanf(fpp,"sgms:%lf,%lf,%lf\n",   &sgms[0],&sgms[1],&sgms[2]);            //    |
   fscanf(fpp,"sgml:%lf\n",           &sgml);                                 //    |
-  fscanf(fpp,"wlik:%d,%d,%d\n",      &wlik[0],&wlik[1],&wlik[2]);            //    |
-  fscanf(fpp,"objsize:%d,%d,%d\n",   &objsize[0],&objsize[1],&objsize[2]);   //    |
-  fscanf(fpp,"margin:%d,%d,%d\n",    &margin [0],&margin [1],&margin [2]);   // Tracking
+  fscanf(fpp,"wlik:%d,%d,%d\n",      &wlik[0],&wlik[1],&wlik[2]);            // Tracking
   fscanf(fpp,"input:%s\n",           in);                                    // File (input)
   fscanf(fpp,"output:%s\n",          out);                                   // File (output)
-  fclose(fpp);fpp=NULL; init_genrand(seed);
-  rad=objsize[0]/2.0; zscale=(double)objsize[0]/objsize[2];nf=(int)N*(1-beta);
+  fclose(fpp);fpp=NULL;
+
+  while((opt=getopt(argc,argv,"d:s:r:h:o:n:b:g:m:f:v"))!=-1){
+    switch(opt){
+      case 'd': dploop =   atoi(optarg); break;
+      case 's': seed   =   atoi(optarg); break;
+      case 'r': root   =-1+atoi(optarg); break;
+      case 'h': rho    =   atoi(optarg); break;
+      case 'o': order  =   atoi(optarg); break;
+      case 'n': N      =   atoi(optarg); break;
+      case 'b': beta   =   atof(optarg); break;
+      case 'g': gamma  =   atof(optarg); break;
+      case 'v': flagv  = 1;              break;
+      case 'f': strcpy(init,optarg);     break;
+      case 'm': sscanf(optarg,"%d,%d,%d",margin,margin+1,margin+2);break;
+      default : exit(1);
+    }
+  }
+
+  if(flagv){
+    printf("\n*** Parameters ***\n");
+    printf("  cutoff: %d\n",               cut);
+    printf("  wmax:   %d,%d,%d\n",         wmax[0],wmax[1],wmax[2]);
+    printf("  lambda: %.1lf\n",            lambda);
+    printf("  zscale: %.1lf\n",            zscale);
+    printf("  alpha:  %.1lf\n",            alpha);
+    printf("  sgmt:   %.1lf,%.1lf,%.1lf\n",sgmt[0],sgmt[1],sgmt[2]);
+    printf("  sgms:   %.1lf,%.1lf,%.1lf\n",sgms[0],sgms[1],sgms[2]);
+    printf("  sgml:   %.1lf\n",            sgml);
+    printf("  wmax:   %d,%d,%d\n",         wlik[0],wlik[1],wlik[2]);
+    printf("\n*** Options ***\n");
+    printf("  dploop: %d\n",               dploop);
+    printf("  seed:   %d\n",               seed);
+    printf("  rho:    %.1lf\n",            rho);
+    printf("  order:  %d\n",               order);
+    printf("  N:      %d\n",               N);
+    printf("  beta:   %.1lf\n",            beta);
+    printf("  gamma:  %.1lf\n",            gamma);
+    printf("  margin: %d,%d,%d\n",         margin[0],margin[1],margin[2]);
+    printf("  init:   %s\n",               strlen(init)?init:"automatic");
+  }
+
+  init_genrand(seed); nf=(int)N*(1-beta);
+  objsize[0]=objsize[1]=(int)lambda;objsize[2]=(int)(lambda/zscale);
   Ls=(2*wlik[0]+1)*(2*wlik[1]+1)*(2*wlik[2]+1);
 
   fp =fopen(in,"rb");if(!fp){printf("File: \'%s\' Not Found.\n",in);exit(1);}
@@ -125,14 +160,14 @@ int main (int argc, char** argv){
   dist  = calloc2d (NVXLIMIT,NVXLIMIT);
 
   fread(y,L,sizeof(byte),fp);for(l=0;l<L;l++)ytmp[l]=y[l];gcenter(g[0],ytmp,imsize);
-  if((opt=getopt(argc,argv,"f:"))!=-1){/* Reading initial positions */
-    fpp=fopen(optarg,"r");if(!fpp){printf("File: \'%s\' Not Found.\n",optarg);exit(1);}
+  if(strlen(init)){/* Reading initial positions */
+    fpp=fopen(init,"r");if(!fpp){printf("File: \'%s\' Not Found.\n",optarg);exit(1);}
     fscanf(fpp,"K=%d\n",&K);for(k=0;k<K;k++)fscanf(fpp,"%lf\t%lf\t%lf\n",x0[k],x0[k]+1,x0[k]+2);
     fclose(fpp);fpp=NULL;
   }
   else{/* Determination of Initial positions */
     cutoff(ytmp,imsize,cut);localmax(vx,&nvx,ytmp,imsize,wmax);
-    dpmeans (lbl,x0,dist,nmem,&K,(const double**)vx,nvx,P,objsize[1],zscale,dploop);
+    dpmeans (lbl,x0,dist,nmem,&K,(const double**)vx,nvx,P,lambda,zscale,dploop);
   }
 
   X     = calloc3d (K,N,P);               // Particles
@@ -174,7 +209,7 @@ int main (int argc, char** argv){
     subimage(Yt0[k],y,x0[k],wlik,imsize);
     subimage(Yt1[k],y,x0[k],wlik,imsize);
   }
-   
+
   printf("\n");
   printf("  o------------------o------o\n");
   printf("  | #Time points     | %4d |\n",T);
@@ -190,7 +225,7 @@ int main (int argc, char** argv){
 
     probs[0]=Q?1-alpha:1;for(q=1;q<=Q;q++)probs[q]=probs[q-1]*alpha;
     val=0;
-    for(q=1;q<=Q;q++)val+=probs[q];
+    for(q=1;q<=Q;q++)val+=probs[q]; if(t!=1)assert(val>0);
     for(q=1;q<=Q;q++)probs[q]/=val; for(q=1;q<=Q;q++)probs[q]*=alpha;
 
     normal(buf,K*N*P);Ks[t]=K;
@@ -210,7 +245,7 @@ int main (int argc, char** argv){
           if(n1)for(j=0;j<n1;j++){assert(ofs>=0&&j+ofs<N); H[k][j+ofs]=n;
             for(p=0;p<P;p++) X[k][j+ofs][p]=X[u][n][p]+noise[k][n][p];
             q=categorical(probs,Q+1);for(p=0;p<P;p++)X[k][j+ofs][p]+=eta[q][p];
-            if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rho*rad) /* Avoiding collisions */
+            if(wdist(X[k][j+ofs],X[u][n],P,zscale)<rho*lambda) /* Avoiding collisions */
               for(p=0;p<P;p++) X[k][j+ofs][p]-=0.5*noise[k][n][p];
           }
           ofs+=n1;
@@ -408,8 +443,8 @@ int filtering (double *W/*O*/, short *yt1/*IO*/, short **Y/*B*/, const byte *y, 
   for(n=0;n<nf;n++) W[n]=likelihood(Y[n],yt1,wdw,sgml);
 
   for(n=0;n<nf;n++) val+=W[n];
-  if(!allzero(W,N))for(n=0;n<N;n++)W[n]/=val;
-  else{
+  if(val>0)for(n=0;n<N;n++)W[n]/=val;
+  else{assert(nf);
     for(n=0;n<nf;n++)W[n]=1.0/nf;
     for(n=nf;n<N;n++)W[n]=0;
   }

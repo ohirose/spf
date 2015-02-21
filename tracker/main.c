@@ -56,7 +56,7 @@ int    filtering    (double *W, short *yt1, short **Y, const byte *y, const doub
 /* The following two functions are defined in the 'mt19937ar.c' file. */
 /* -------------------------------------------------------------------*/               
 void          init_genrand   (unsigned long s);
-double        genrand_real1  (void);
+double        genrand_res53  (void);
 
 int           categorical    (const double *probs, const int N);
 
@@ -365,13 +365,13 @@ int objinimage(const double *x, const int *imsize, const int *objsize, const int
 
 
 int categorical(const double *probs, const int N){
-  int i; double u =genrand_real1();
+  int i; double u =genrand_res53();
   for(i=0;i<N;i++){u-=probs[i];if(u<=0)break;}
   return i;
 }
 
 int resampling(int *nums, const double *probs, const int N){
-  int i; double u =genrand_real1()/(double)N; 
+  int i; double u =genrand_res53()/(double)N;
   for(i=0;i<N;i++){
     nums[i]=floor((probs[i]-u)*N)+1; 
     u+=(nums[i]/(double)N)-probs[i];
@@ -381,11 +381,11 @@ int resampling(int *nums, const double *probs, const int N){
 
 int normal(double *v, int nv){
   int i,n=(nv/2)-1,odd=(nv%2==1)?1:0; double u1,u2;
-  if(n)for(i=0;i<n;i++){u1=genrand_real1();u2=genrand_real1();
+  if(n)for(i=0;i<n;i++){u1=genrand_res53();u2=genrand_res53();
     v[2*i  ]=sqrt(-2*log(u1))*cos(2*M_PI*u2);
     v[2*i+1]=sqrt(-2*log(u1))*sin(2*M_PI*u2);
   } 
-  if(odd){u1=genrand_real1();u2=genrand_real1();v[nv-1]=sqrt(-2*log(u1))*cos(2*M_PI*u2);}
+  if(odd){u1=genrand_res53();u2=genrand_res53();v[nv-1]=sqrt(-2*log(u1))*cos(2*M_PI*u2);}
   return 0;
 }
 

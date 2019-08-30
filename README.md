@@ -1,7 +1,7 @@
 
 # SPF-CellTracker
 
-This is a software suite for tracking more than a hundred of cells from 4D live cell
+This is a software suite for tracking more than several hundreds of cells from 4D live cell
 imaging data with following characteristics:
 
 1. gray scale image, 
@@ -16,44 +16,42 @@ alt="Visualization of neurons in a nematode, C. elegans." width="300" height="24
 target="_blank"><img src="http://img.youtube.com/vi/IdPZ3d_D-iM/0.jpg"
 alt="Visualization of neurons in a nematode, C. elegans." width="300" height="240" border="10" /></a>
 
-This software suite is composed of three executables: **convert**, **track**, and **view**.
-The first and second software are implemented in C while the third is implemented in C++.
-OpenCV 2.4+ is used for *convert*. OpenGL 3.3+ and freeglut are used for *view*.
+Details of the algorithm is available [here](https://ieeexplore.ieee.org/document/8186251).
+This software suite is composed of four executables: `spf-convert`, `spf-detect`, `spf-track`,
+and `spf-view`. All of them are implemented in C/C++ with OpenMP, OpenCV, OpenGL, freeglut.
 
-## convert
+## Compilation:
 
-The first software **convert** converts a set of 2D images that compose 4D live-cell
-imaging data into a single file encoded as our original binary format. The software
-*convert* utilizes OpenCV 2.4+ only for loading original image files, and thereby
-all the image file formats which OpenCV 2.4+ supports can be converted. 
-During conversion, average subtraction for each 2D image and 3D median filter for
-each set of 2D images that compose a 3D image can be optionally applied.
-The average subtraction removes back ground noise whose level is strongly dependent on 
-the depth of *z*-axis while the 3D median filter removes salt and pepper noise. 
-We implemented a linear-time algorithm for computing median to make 3D median filter faster.
+1. Install GCC-mp-6, OpenCV, OpenGL, and freeglut.
 
-COMPILATION:
+2. Type `make` in the `src` directory. If you failed the compilation, try this:
+  - Replace `gcc-mp-6` with `gcc` in `src/tracker/main.c`, which disables the use of OpenMP.
 
-1. Install OpenCV 2.4+.
+## Demo:
 
-2. Get all the source codes registered in **converter** directory of this 
-   repository and move them to the current directory.
+1. Compile source codes by following the above instruction.
 
-3. Modify paths to OpenCV library and header files indicated by **LIBPATH** 
-   and **INCLUDE** in **makefile** if needed. 
+2. Type `./spf-pipeline`.
 
-4. Type `make` in the terminal window.
+## Pre-processing
 
+The binary `spf-convert` converts 4D image sequence composed of multiple image files.
+The 8-bit grayscale images can be converted. If your image sequence is composed of 16-bit grayscale
+images, convert them into 8-bit images by using ImageMagick, for example.
+The conversion is performed by the following Bash script with the ImageMagick command `convert`:
 
-USAGE:
+```
+$TIME=200
+$ZDEPTH=20
+for t in `seq -f%04g 1 $TIME`; do 
+  echo $t;
+  for z in `seq -f%02g 1 $ZDEPTH`; do 
+    convert yourimage_t${t}_z00${z}.tif -evaluate multiply 16 -depth 8 yourimage8bit_t${t}_z00${z}.tif    
+  done;
+done;
+```
 
-1. Modify the configuration file **conf-convert.txt** according to your preference.
-
-2. Type `./convert` in the terminal window.
-
-PARAMETERS:
-
-The parameters of *convert* can be set in **conf-convert.txt** whose file format is as follows:
+The parameters of `spf-convert` can be set in `conf-convert.txt` whose file format is as follows:
 
     prefix:image
     imtype:tif
@@ -62,12 +60,12 @@ The parameters of *convert* can be set in **conf-convert.txt** whose file format
     sbmean:1
     median:1,1,1
     inform:1
-    output:data.bin
 
 - prefix: The prefix of file names for input 2D images. 
   - This parameter only accepts any character sequence without white spaces.
 - imtype: The image file format of input 2D images. 
-  - Any formats that OpenCV 2.4+ supports are acceptable. For example, *tif*, *png*, *jpg*, and so on.
+  - Any formats of 8-bit gray scale images are acceptable if they are supported by OpenCV.
+    For example, *tif*, *png*, *jpg*, and so on.
 - number: Specifies a type of input file names and offsets for serial numbers. 
   - The first number specifies a type of input 2D file names.
   - The second and third number specify offset values for serial numbers.
@@ -77,7 +75,7 @@ The parameters of *convert* can be set in **conf-convert.txt** whose file format
   - The number of 2D images that compose a 3D image is 20.
   - The number of time points are 1000.
 - sbmean: Whether or not the average intensity of each 2D image is subtracted from the image, aiming at
-removing the background noise whose level is dependent on the value of *z*-axis. 
+  removing the background noise whose level is dependent on the value of *z*-axis. 
   - `sbmean:1`--> The average is subtracted.
   - `sbmean:0`--> The average is **NOT** subtracted.
 - median: Specifies window size used for 3D median filter for removing salt and pepper noise. 
@@ -87,9 +85,8 @@ removing the background noise whose level is dependent on the value of *z*-axis.
 - inform: Whether or not file names of input 2D images correctly read is printed. 
   - `inform:1`--> File names are printed.
   - `inform:0`--> File names are **NOT** printed.
-- output: Output file name.
 
-The file names of input 2D images are customizable by the first four parameters *prefix*, *imtype*, *number*
+The file names of input 2D images are can be customized by the first four parameters *prefix*, *imtype*, *number*
 and *imsize* of *conf-convert.txt*.  Accessible file names of input 2D images are categorized into following 
 two types:
 
@@ -117,52 +114,54 @@ and the number of *z*-values are indicated by the third and fourth values of `im
 In the second case, the first and third values must be 0. Serial numbers are incremented
 in the order of zsize\*t+z. These can start from any of non-negative integers specified by
 the second value of `number`. 
- 
 
-## track
-The second software **track** is the main software for automatic detection and tracking of
-multiple cells based on the SPF algorithm from the converted 4D image file. For details of
-the algorithm, please refer to the article titled *SPF-CellTracker: Multiple cell tracking with a
-spatial particle filter* (in submission).
+## Cell Detection
 
-COMPILATION:
+`spf-detect` is an executable for finding cells captured by a cell image with z-stacks.
+It requires the result of `spf-convert`.
+To start it up, follow the command instructed by `spf-pipeline.sh`.
+Cells are detected by the following procedure:
+1. Find local peaks of voxel values from the image with the Laplacian of Gaussian filter.
+2. Cluster local peaks of voxel values within the maximum cell size.
 
-1. Get all the source codes registered in **tracker** directory of this
-   repository and move them to your current directory.
+The parameters of `spf-detect` can be set in ``setting/conf-detect.txt`` The file format is as follows:
 
-2. If you are Linux user, replace **gcc-mp-4.8** with **gcc** in **makefile**.
-   Type `make` in the terminal window.
+    Intensity cutoff            10
+    Max number of cells         512
+    Peak bounding box           1,1,1
+    Cell bounding box           10,10,1
+    Lambda in dpmeans           5.0
+    Number of loops in dpmeans  10
+    Standard dev. in log        1.0
 
-USAGE:
+- Intensity cutoff: Voxel values which are less than this value are ignored.
+- Max number of cells: The maximum number of cells to be reported.
+- Peak bounding box: defines the window size of a local peak of voxel values.
+  - `l,m,n` --> corresponds to the window size (2l+1, 2m+1, 2n+1).
+  - Local peaks in the window are considered to be the same peak.
+- Cell bounding box: defines the window size of the LoG filter, which can be interpreted as the maximum size of cells.
+  - `l,m,n` --> corresponds to the window size (2l+1, 2m+1, 2n+1).
+- Number of loops in dpmeans: The number of iterations for the DP-means algorithm, which
+  estimates a cell position by clustering local peaks.
+- Standard dev. in log: defines the blob size for the Laplacian of Gaussian filter.
 
-1. Modify the configuration file `conf-track.txt` according to your preference.
+## Cell tracking
 
-2. Type `./track` in the terminal window.
+`spf-track` is the executable that tracks cells captured by 4D image sequence.
+It requires the results of `spf-convert` and `spf-detect`.
+To start it up, follow the command instructed by `spf-pipeline.sh`.
+The parameters of `spf-track` can be set in ``setting/conf-track.txt``. 
+The file format is as follows:
 
-PARAMETERS:
-
-The parameters of *track* can be set in **conf-track.txt**. The file format is as follows:
-
-    cutoff:18
-    wmax:2,2,1
-    lambda:6
-    zscale:3
+    np:1000
     alpha:0.85
     sgmt:3.0,3.0,0.1
     sgms:1.5,1.0,0.1
     sgml:10
     wlik:5,5,1
-    input:data.bin
-    output:result.bin
 
-- cutoff: The cutoff value of fluorescent intensities (0 ... 255).
-  - Required only for cell detection and counting.
-- wmax: Specifies window size required for cell detection.
-  - Should be **narrower** than the size of cells.
-  - `wmax:l,m,n`--> Window size becomes (2l+1, 2m+1, 2n+1).
-- lambda: The maximum radius of cells to be tracked.
-- zscale: Ratio of the voxel step length along *z*-axis to that in *xy*-plane.
-- alpha: The balance parameter that controlls importance of covariation and relative positions among cells (0 ... 1.0).
+- np: The number of particles.
+- alpha: The balance parameter that controls importance of covariation and relative positions among cells (0 ... 1.0).
   - `alpha:1.0`--> Information of covariation among cells is only utilized.
   - `alpha:0.0`--> Information of initial relative positions among cells is only utilized.
   - `alpha:0.5`--> The both information is utilized with equal weight.
@@ -173,38 +172,32 @@ The parameters of *track* can be set in **conf-track.txt**. The file format is a
 - sgml: Standard deviation of the likelihood function.
 - wlik: Specifies window size required for the computation of likelihoods.
   - `wlik:l,m,n`--> Window size becomes (2l+1, 2m+1, 2n+1).
-- input: Input file name.
-- output: Output file name.
 
+## Visualization
 
-## view
+`spf-view` is an executable for visualizing 4D imaging sequence and tracking results.
+It requires the result of `spf-convert`. The result of `spf-track` is optionally visualized.
+To start it up, follow the command instructed by `spf-pipeline.sh`.
 
-The third software **view** is to visualize the 4D image data with a
-tracking result. This software allows us to zoom in, zoom out, and rotate
-4D image during playing 4D image data. Currently, only a binary file for
-Mac OS X is available for the software *view*. We will distribute source
-codes in the near future.
+Usage:
 
-INSTALL (Mac only):
-
-1. Install **XQuartz**, an implementation of X window system 
-   which runs on OS X. 
-
-2. Install **freeglut**, a library for OpenGL.
-
-3. Get the binary file **view** in **bin/Mac** directory of this repository 
-   and move it to the current directory.
-
-USAGE:
-
-1. Put a 4D image file converted by *convert* and a trajectory file output 
-   by *tracker* in the current directory.
-
-2. Run XQuartz and type the following command in your terminal window:
-
-  `./view input-file-name trajectory-file-name`
-
-
-
-
+-   `b`: Toggle display mode regarding trackers: all/one-by-one
+-   `c`: Increase the cutoff of voxel intensities
+-   `d`: Decrease the cutoff of voxel intensities
+-   `e`: Enable/Disable the voxel aspect ratio along z-axis
+-   `f`: Enable/Disable focus mode
+-   `m`: Next tracker in focus mode
+-   `n`: Previous tracker in focus mode
+-   `o`: Draw/Delete raw intensity data
+-   `q`: Exit viewer
+-   `r`: Reset zoom
+-   `s`: Start/Stop
+-   `t`: Draw/Delete tracker positions
+-   `w`: Reset rotation originated from keyboard operation
+-   `x`: rotate around x-axis
+-   `y`: rotate around y-axis
+-   `z`: rotate around z-axis
+-   `.`: Reset rotation originated from mouse operation
+-   `,`: Reset translation originated from mouse operation
+- `ESC`: Exit viewer
 

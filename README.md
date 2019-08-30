@@ -22,7 +22,7 @@ and `spf-view`. All of them are implemented in C/C++ with OpenMP, OpenCV, OpenGL
 
 ## Compilation:
 
-1. Install GCC-mp-6, OpenCV, OpenGL, and freeglut.
+1. Install XQuartz, GCC-mp-6, OpenCV, OpenGL, and freeglut.
 
 2. Type `make` in the `src` directory. If you failed the compilation, try this:
   - Replace `gcc-mp-6` with `gcc` in `src/tracker/main.c`, which disables the use of OpenMP.

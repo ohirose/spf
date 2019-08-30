@@ -1,0 +1,7 @@
+Intensity cutoff            15
+Max number of cells         512
+Peak bounding box           1,1,1
+Cell bounding box           10,10,1
+Lambda in dpmeans           4.0
+Number of loops in dpmeans  10
+standard dev. in log        1.0

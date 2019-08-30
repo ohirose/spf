@@ -1,6 +1,0 @@
-cutoff:30
-wmax:1,1,1
-lambda:6
-zscale:3
-input:data.bin
-output:result.bin

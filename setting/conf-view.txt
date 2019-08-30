@@ -1,0 +1,18 @@
+## viewer configuration ##
+
+window.size              1800,1200
+plotPointSize            1
+segmentation.colorcnt    12
+
+backgroundColor          0.4, 0.4, 0.4
+foregroundColor          1.0, 1.0, 1.0
+cursorColor              1.0, 0.0, 1.0
+
+trackerBoxsize           8,8,3
+trackerColorType         0
+
+intervalTime_ms          0
+scrShotFileName          screenshot.rgb
+
+VoxelAspectRatio.z       3.5
+DefaultCutoff            15

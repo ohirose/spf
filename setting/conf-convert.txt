@@ -1,0 +1,8 @@
+prefix:data/image8bit
+imtype:tif
+number:1,1,1
+imsize:512,256,20,100
+aspect:3.5
+sbmean:1
+median:1,1,1
+inform:1
